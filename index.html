@@ -1,460 +1,263 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>🌊 海洋風旅遊分帳記帳本</title>
-  <style>
-    :root {
-      --bg-color: #FDFBF7;
-      --card-bg: #FFFFFF;
-      --primary: #2E7D9E;
-      --primary-light: #EBF4F6;
-      --secondary: #5C9EAD;
-      --accent: #D9822B;
-      --text: #2D3748;
-      --text-muted: #718096;
-      --border: #E2E8F0;
-      --danger: #E53E3E;
-      --success: #38A169;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌊 旅遊記帳與分帳助手</title>
+    <style>
+        :root {
+            --bg-cream: #FAF6F0;       /* 柔和米色背景 */
+            --card-beige: #F3ECE1;     /* 卡片溫暖米黃色 */
+            --ocean-dark: #1F4E5B;     /* 深海洋藍 (主要標題/按鈕) */
+            --ocean-light: #2E7D8E;    /* 淺海藍 (次要標題) */
+            --accent-coral: #E0A96D;   /* 沙灘暖色 (強調標示) */
+            --text-dark: #2B2B2B;
+        }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-    body { background-color: var(--bg-color); color: var(--text); font-size: 18px; line-height: 1.5; padding-bottom: 90px; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-cream);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 16px;
+            font-size: 18px; /* 適合手機大字體 */
+            line-height: 1.5;
+        }
 
-    header { background-color: var(--primary); color: white; text-align: center; padding: 22px 15px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: 0 4px 12px rgba(46,125,158,0.15); }
-    header h1 { font-size: 1.7rem; margin-bottom: 4px; letter-spacing: 1px; }
-    header p { font-size: 0.95rem; opacity: 0.9; }
+        h1, h2 {
+            color: var(--ocean-dark);
+            text-align: center;
+            margin-top: 8px;
+            margin-bottom: 12px;
+        }
 
-    .container { padding: 16px; max-width: 600px; margin: 0 auto; }
+        .card {
+            background-color: var(--card-beige);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border: 1px solid #E5DCCB;
+        }
 
-    .card { background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(46,125,158,0.08); border: 1px solid var(--border); }
-    .card h2 { font-size: 1.35rem; color: var(--primary); border-bottom: 2px solid var(--primary-light); padding-bottom: 10px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: 12px;
+            color: var(--ocean-dark);
+            font-size: 16px;
+        }
 
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 1.05rem; color: var(--text); }
-    input[type="text"], input[type="number"], select { width: 100%; padding: 14px; font-size: 1.1rem; border: 2px solid var(--border); border-radius: 12px; background-color: #FAFAFA; outline: none; transition: border-color 0.2s; }
-    input:focus, select:focus { border-color: var(--secondary); background-color: #FFFFFF; }
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 6px;
+            border-radius: 10px;
+            border: 1px solid #CCC;
+            font-size: 18px; /* 大字體輸入 */
+            box-sizing: border-box;
+            background-color: #FFF;
+        }
 
-    .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
-    .checkbox-item { background: var(--primary-light); padding: 10px 16px; border-radius: 24px; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
-    .checkbox-item input { transform: scale(1.4); }
+        button.btn-primary {
+            background-color: var(--ocean-dark);
+            color: white;
+            font-weight: bold;
+            border: none;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
 
-    .btn { display: block; width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 14px; font-size: 1.15rem; font-weight: bold; cursor: pointer; text-align: center; box-shadow: 0 4px 10px rgba(46,125,158,0.2); transition: transform 0.1s, background-color 0.2s; }
-    .btn:active { transform: scale(0.98); }
-    .btn-secondary { background: var(--secondary); box-shadow: 0 4px 10px rgba(92,158,173,0.2); }
-    .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); box-shadow: none; padding: 10px; font-size: 1rem; }
+        button.btn-primary:active {
+            background-color: var(--ocean-light);
+        }
 
-    .expense-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
-    .expense-item:last-child { border-bottom: none; }
-    .expense-info .title { font-weight: bold; font-size: 1.15rem; margin-bottom: 4px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
-    .expense-info .sub { font-size: 0.95rem; color: var(--text-muted); }
-    .expense-amount { font-size: 1.25rem; font-weight: bold; color: var(--accent); text-align: right; }
+        button:disabled {
+            background-color: #AAA;
+            cursor: not-allowed;
+        }
 
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; background: var(--primary-light); color: var(--primary); }
-    .badge-done { background: #DEF7EC; color: #03543F; }
-    .badge-pending { background: #FEF08A; color: #713F12; }
+        .item-row {
+            border-bottom: 1px solid #E5DCCB;
+            padding: 10px 0;
+            font-size: 16px;
+        }
 
-    .settlement-item { background: var(--primary-light); padding: 14px 16px; border-radius: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-    .settlement-text { font-size: 1.1rem; }
+        .item-row:last-child {
+            border-bottom: none;
+        }
 
-    .nav-tabs { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border); box-shadow: 0 -4px 12px rgba(0,0,0,0.06); z-index: 100; }
-    .tab-btn { flex: 1; padding: 14px 0; text-align: center; font-size: 1.05rem; font-weight: bold; color: var(--text-muted); border: none; background: none; cursor: pointer; }
-    .tab-btn.active { color: var(--primary); border-top: 4px solid var(--primary); background: var(--primary-light); }
-
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    
-    #loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(253, 251, 247, 0.85); text-align: center; padding-top: 220px; font-weight: bold; font-size: 1.3rem; color: var(--primary); z-index: 999; backdrop-filter: blur(2px); }
-  </style>
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .badge-settled { background-color: #D4EDDA; color: #155724; }
+        .badge-pending { background-color: #F8D7DA; color: #721C24; }
+    </style>
 </head>
 <body>
 
-<div id="loading-overlay">🌊 資料同步中，請稍候...</div>
+    <h1>🏖️ 旅遊分帳與明細助手</h1>
 
-<header>
-  <h1>🌊 旅遊分帳記帳本</h1>
-  <p>即時共享 · 自動分帳 · 明細匯出</p>
-</header>
-
-<div class="container">
-
-  <!-- 1. 記帳與明細頁面 -->
-  <div id="tab-records" class="tab-content active">
-    <!-- 成員設定 -->
+    <!-- 消費輸入表單 -->
     <div class="card">
-      <h2>👥 旅程成員設定</h2>
-      <div class="form-group">
-        <input type="text" id="member-input" placeholder="成員名字（請用逗號分隔）">
-      </div>
-      <button class="btn btn-outline" onclick="saveMembers()">更新成員名單</button>
+        <h2>📝 新增消費紀錄</h2>
+        <form id="expenseForm">
+            <label>項目說明</label>
+            <input type="text" id="item" placeholder="例如：第一天晚餐" required>
+
+            <label>總金額 ($)</label>
+            <input type="number" id="amount" placeholder="9000" required>
+
+            <label>消費類別</label>
+            <select id="category">
+                <option value="餐飲">🍽️ 餐飲</option>
+                <option value="交通">🚗 交通</option>
+                <option value="住宿">🏨 住宿</option>
+                <option value="伴手禮">🎁 伴手禮</option>
+                <option value="門票/娛樂">🎟️ 門票/娛樂</option>
+                <option value="雜費">🛒 雜費</option>
+            </select>
+
+            <label>實際代墊者 (主要窗口)</label>
+            <select id="payer">
+                <option value="蓉">蓉 (窗口: 云, 閎, 蓉)</option>
+                <option value="慈">慈 (窗口: 慈, 吳)</option>
+                <option value="沛">沛 (窗口: 鵬, 沛, 畯, 璇)</option>
+                <option value="鵬">鵬</option>
+                <option value="云">云</option>
+                <option value="閎">閎</option>
+                <option value="吳">吳</option>
+                <option value="畯">畯</option>
+                <option value="璇">璇</option>
+            </select>
+
+            <label>受益/分攤成員 (以逗號分隔)</label>
+            <input type="text" id="members" value="鵬,沛,蓉,云,閎,慈,吳,畯,璇">
+
+            <label>是否屬代墊性質？</label>
+            <select id="isAdvance">
+                <option value="是">是 (需參與分帳)</option>
+                <option value="否">否 (個人獨立花費)</option>
+            </select>
+
+            <label>分帳狀態</label>
+            <select id="settleStatus">
+                <option value="未分帳">❌ 未分帳</option>
+                <option value="已分帳">✅ 已分帳 / 已付清</option>
+            </select>
+
+            <button type="button" id="submitBtn" class="btn-primary" onclick="submitData()">同步至 Google Sheet</button>
+        </form>
     </div>
 
-    <!-- 新增支出 -->
+    <!-- 即時連動明細列表 -->
     <div class="card">
-      <h2>➕ 新增支出紀錄</h2>
-      <div class="form-group">
-        <label>消費項目描述</label>
-        <input type="text" id="exp-title" placeholder="例如：海鮮晚餐、租車自駕">
-      </div>
-      <div class="form-group">
-        <label>金額 ($)</label>
-        <input type="number" id="exp-amount" placeholder="0">
-      </div>
-      <div class="form-group">
-        <label>消費類別</label>
-        <select id="exp-category">
-          <option value="🍽️ 餐飲">🍽️ 餐飲（早午晚餐、小吃飲品）</option>
-          <option value="🚗 交通">🚗 交通（租車、油錢、車票）</option>
-          <option value="🏠 住宿">🏠 住宿（飯店、民宿包棟）</option>
-          <option value="🎟️ 門票娛樂">🎟️ 門票娛樂（景點門票、活動體驗）</option>
-          <option value="🎁 伴手禮">🎁 伴手禮（名產禮盒、個人私買）</option>
-          <option value="📦 雜項公費">📦 雜項公費（零食礦泉水、公共用品）</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>誰先付的錢？（代墊人）</label>
-        <select id="exp-payer"></select>
-      </div>
-      <div class="form-group">
-        <label>這筆費用誰要分攤？</label>
-        <div class="checkbox-group" id="split-members-container"></div>
-      </div>
-      <div class="form-group">
-        <label>付款/分帳狀態</label>
-        <select id="exp-status">
-          <option value="⏳ 未結算">⏳ 未結算（由代墊者支付，加入最終總分帳）</option>
-          <option value="✅ 已付清">✅ 已付清（成員已現場付給代墊者，僅做記錄）</option>
-        </select>
-      </div>
-      <button class="btn" onclick="addExpense()">儲存並同步到雲端</button>
+        <h2>📜 最新消費明細 (同步 Google Sheet)</h2>
+        <div id="dataList">資料讀取中...</div>
     </div>
 
-    <!-- 支出列表 -->
-    <div class="card">
-      <h2>📋 支出明細紀錄 <button style="font-size:0.9rem; background:none; border:none; color:var(--primary); cursor:pointer; font-weight:normal;" onclick="fetchExpenses()">🔄 重新整理</button></h2>
-      <div id="expense-list">讀取資料中...</div>
-    </div>
-  </div>
+    <script>
+        // 已帶入您提供的 Google Apps Script Web App URL
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyrZzupIe0nuod4zoB4YxLk2VYmeUR5FcLw3cJDmqmbh9WCIkkZFdaHUIe5J--0Mqti/exec";
 
-  <!-- 2. 結算與統計頁面 -->
-  <div id="tab-summary" class="tab-content">
-    <div class="card">
-      <h2>📊 旅程總費用概況</h2>
-      <div id="total-summary-stats"></div>
-    </div>
+        // 頁面開啟時自動向 Google Sheet 載入資料
+        window.onload = function() {
+            loadData();
+        };
 
-    <div class="card">
-      <h2>👤 個人/家族花費分析</h2>
-      <div class="form-group">
-        <label>選擇查看成員</label>
-        <select id="select-person-analysis" onchange="renderPersonAnalysis()"></select>
-      </div>
-      <div id="person-analysis-result"></div>
-    </div>
+        // 1. 送出表單資料到 Google Sheet
+        function submitData() {
+            const submitBtn = document.getElementById("submitBtn");
+            const item = document.getElementById("item").value;
+            const amount = document.getElementById("amount").value;
 
-    <div class="card">
-      <h2>🔄 3 大窗口最終結算（蓉 / 慈 / 沛）</h2>
-      <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:12px;">
-        • 蓉窗口：云、閎、蓉<br>
-        • 慈窗口：慈、吳<br>
-        • 沛窗口：鵬、沛、畯、璇
-      </p>
-      <div id="settlement-list">計算中...</div>
-    </div>
+            if (!item || !amount) {
+                alert("請填寫項目說明與金額！");
+                return;
+            }
 
-    <div class="card">
-      <h2>📥 匯出收支明細</h2>
-      <button class="btn btn-secondary" onclick="exportToCSV()">匯出 CSV 試算表檔案</button>
-    </div>
-  </div>
+            submitBtn.disabled = true;
+            submitBtn.innerText = "同步至 Google Sheet 中...";
 
-</div>
+            const payload = {
+                item: item,
+                amount: amount,
+                category: document.getElementById("category").value,
+                payer: document.getElementById("payer").value,
+                members: document.getElementById("members").value,
+                isAdvance: document.getElementById("isAdvance").value,
+                settleStatus: document.getElementById("settleStatus").value
+            };
 
-<!-- 底部導覽列 -->
-<div class="nav-tabs">
-  <button class="tab-btn active" onclick="switchTab('records', event)">📝 記帳明細</button>
-  <button class="tab-btn" onclick="switchTab('summary', event)">🧮 結算分帳</button>
-</div>
-
-<script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbysNFIHtz7NRmcH88rBx0zRzMIy7cyGY2x2BM7IHymy822YNXBuFCj0c_qpW0EWlpw/exec";
-
-  let members = JSON.parse(localStorage.getItem('trip_members')) || ['鵬', '沛', '蓉', '云', '閎', '慈', '吳', '畯', '璇'];
-  let expenses = [];
-
-  function showLoading(show) {
-    document.getElementById('loading-overlay').style.display = show ? 'block' : 'none';
-  }
-
-  function init() {
-    document.getElementById('member-input').value = members.join(', ');
-    updateMemberSelects();
-    fetchExpenses();
-  }
-
-  function saveMembers() {
-    const input = document.getElementById('member-input').value;
-    const list = input.split(',').map(s => s.trim()).filter(s => s !== '');
-    if(list.length === 0) return alert('請至少輸入一位成員名字');
-    members = list;
-    localStorage.setItem('trip_members', JSON.stringify(members));
-    updateMemberSelects();
-    alert('成員名單已更新！');
-  }
-
-  function updateMemberSelects() {
-    const payerSelect = document.getElementById('exp-payer');
-    const analysisSelect = document.getElementById('select-person-analysis');
-    const container = document.getElementById('split-members-container');
-
-    payerSelect.innerHTML = members.map(m => `<option value="${m}">${m}</option>`).join('');
-    analysisSelect.innerHTML = members.map(m => `<option value="${m}">${m}</option>`).join('');
-
-    container.innerHTML = members.map(m => `
-      <label class="checkbox-item">
-        <input type="checkbox" value="${m}" checked class="split-checkbox"> ${m}
-      </label>
-    `).join('');
-  }
-
-  function fetchExpenses() {
-    showLoading(true);
-    fetch(API_URL)
-      .then(res => res.json())
-      .then(data => {
-        expenses = data.map(item => {
-          let st = item.status ? String(item.status) : '';
-          let displayStatus = st.includes('已付清') ? '✅ 已付清' : '⏳ 未結算';
-          return {
-            ...item,
-            amount: parseFloat(item.amount),
-            splitWith: typeof item.splitWith === 'string' ? item.splitWith.split(';') : item.splitWith,
-            status: displayStatus
-          };
-        });
-        renderExpenses();
-        showLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        alert('讀取失敗，請確認 API 網址是否正確設定');
-        showLoading(false);
-      });
-  }
-
-  function addExpense() {
-    const title = document.getElementById('exp-title').value.trim();
-    const amount = parseFloat(document.getElementById('exp-amount').value);
-    const category = document.getElementById('exp-category').value;
-    const payer = document.getElementById('exp-payer').value;
-    const status = document.getElementById('exp-status').value;
-    
-    const checkboxes = document.querySelectorAll('.split-checkbox:checked');
-    const splitWith = Array.from(checkboxes).map(cb => cb.value);
-
-    if (!title || isNaN(amount) || amount <= 0) return alert('請輸入有效的消費名稱與金額');
-    if (splitWith.length === 0) return alert('請至少選擇一位分攤成員');
-
-    const item = {
-      action: "add",
-      id: Date.now(),
-      title,
-      amount,
-      category,
-      payer,
-      splitWith: splitWith.join(';'),
-      status
-    };
-
-    showLoading(true);
-    fetch(API_URL, {
-      method: 'POST',
-      body: JSON.stringify(item)
-    })
-    .then(res => res.json())
-    .then(() => {
-      document.getElementById('exp-title').value = '';
-      document.getElementById('exp-amount').value = '';
-      fetchExpenses();
-    });
-  }
-
-  function deleteExpense(id) {
-    if(confirm('確定要刪除這筆支出紀錄嗎？')) {
-      showLoading(true);
-      fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: "delete", id: id })
-      })
-      .then(res => res.json())
-      .then(() => fetchExpenses());
-    }
-  }
-
-  function renderExpenses() {
-    const container = document.getElementById('expense-list');
-    if (expenses.length === 0) {
-      container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:10px 0;">目前尚無任何花費紀錄</p>';
-      return;
-    }
-
-    container.innerHTML = expenses.slice().reverse().map(e => {
-      const isDone = e.status && e.status.includes('已付清');
-      return `
-        <div class="expense-item">
-          <div class="expense-info">
-            <div class="title" style="display:flex; align-items:center; flex-wrap:wrap; gap:6px;">
-              ${e.title} 
-              <span class="badge">${e.category}</span>
-              <span class="badge ${isDone ? 'badge-done' : 'badge-pending'}">${e.status}</span>
-            </div>
-            <div class="sub">代墊：<b>${e.payer}</b> | 分攤：${Array.isArray(e.splitWith) ? e.splitWith.join(', ') : e.splitWith}</div>
-          </div>
-          <div>
-            <div class="expense-amount">$${e.amount}</div>
-            <button style="color:var(--danger); background:none; border:none; font-size:0.85rem; cursor:pointer; margin-top:4px;" onclick="deleteExpense(${e.id})">刪除</button>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function switchTab(tab, evt) {
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
-    if (tab === 'records') {
-      document.getElementById('tab-records').classList.add('active');
-    } else {
-      document.getElementById('tab-summary').classList.add('active');
-      calculateSettlement();
-      renderPersonAnalysis();
-    }
-    evt.target.classList.add('active');
-  }
-
-  function calculateSettlement() {
-    let totalTrip = 0;
-
-    // 3 大窗口成員歸屬定義
-    const groupMap = {
-      '蓉': ['云', '閎', '蓉'],
-      '慈': ['慈', '吳'],
-      '沛': ['鵬', '沛', '畯', '璇']
-    };
-
-    function getRepresentative(person) {
-      for (let rep in groupMap) {
-        if (groupMap[rep].includes(person)) return rep;
-      }
-      return person;
-    }
-
-    let balances = { '蓉': 0, '慈': 0, '沛': 0 };
-
-    expenses.forEach(e => {
-      totalTrip += e.amount;
-      
-      // 僅計算「未結算」的項目
-      if (!e.status || !e.status.includes('已付清')) {
-        let payerRep = getRepresentative(e.payer);
-        if (balances[payerRep] !== undefined) {
-          balances[payerRep] += e.amount;
+            fetch(GAS_API_URL, {
+                method: "POST",
+                mode: "no-cors", // 跨網域存取 (CORS) 必備
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                alert("✅ 成功新增並同步至 Google Sheet！");
+                document.getElementById("expenseForm").reset();
+                document.getElementById("members").value = "鵬,沛,蓉,云,閎,慈,吳,畯,璇";
+                submitBtn.disabled = false;
+                submitBtn.innerText = "同步至 Google Sheet";
+                
+                // 1.5 秒後自動刷新明細清單
+                setTimeout(loadData, 1500);
+            })
+            .catch(err => {
+                alert("❌ 同步失敗：" + err);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "同步至 Google Sheet";
+            });
         }
-        
-        const splitList = Array.isArray(e.splitWith) ? e.splitWith : [];
-        const perHead = splitList.length ? e.amount / splitList.length : 0;
-        
-        splitList.forEach(m => {
-          let memberRep = getRepresentative(m);
-          if (balances[memberRep] !== undefined) {
-            balances[memberRep] -= perHead;
-          }
-        });
-      }
-    });
 
-    document.getElementById('total-summary-stats').innerHTML = `
-      <p style="font-size:1.25rem;">全團總花費（含已付清）：<b style="color:var(--accent); font-size:1.4rem;">$${totalTrip.toFixed(0)}</b></p>
-      <p style="font-size:1rem; color:var(--text-muted); margin-top:4px;">全團 9 人平均花費：$${(members.length ? totalTrip/members.length : 0).toFixed(0)} / 人</p>
-    `;
+        // 2. 從 Google Sheet 讀取最新明細
+        function loadData() {
+            fetch(GAS_API_URL)
+            .then(res => res.json())
+            .then(data => {
+                const listDiv = document.getElementById("dataList");
+                if (!data || data.length === 0) {
+                    listDiv.innerHTML = "<p style='text-align:center;'>目前尚無紀錄</p>";
+                    return;
+                }
 
-    let debtors = [], creditors = [];
-    for (let rep in balances) {
-      if (balances[rep] < -1) debtors.push({ name: rep, amount: -balances[rep] });
-      if (balances[rep] > 1) creditors.push({ name: rep, amount: balances[rep] });
-    }
+                let html = "";
+                // 將最新新增的紀錄顯示在最上方
+                data.slice().reverse().forEach(row => {
+                    const itemName = row["項目說明"] || row.item || "未命名項目";
+                    const itemAmt = row["總金額"] || row.amount || 0;
+                    const itemPayer = row["實際代墊者"] || row.payer || "未知";
+                    const itemCat = row["類別"] || row.category || "雜費";
+                    const itemStatus = row["是否已分帳/結清"] || row.settleStatus || "未分帳";
 
-    let settlementHTML = '';
-    let i = 0, j = 0;
+                    const badgeClass = (itemStatus === "已分帳" || itemStatus === "已結清") ? "badge-settled" : "badge-pending";
 
-    while (i < debtors.length && j < creditors.length) {
-      let pay = Math.min(debtors[i].amount, creditors[j].amount);
-      settlementHTML += `
-        <div class="settlement-item">
-          <div class="settlement-text">
-            👑 <b>${debtors[i].name} 窗口</b> 應轉帳給 👑 <b>${creditors[j].name} 窗口</b>
-          </div>
-          <div style="color:var(--accent); font-weight:bold; font-size:1.25rem;">$${pay.toFixed(0)}</div>
-        </div>
-      `;
-      debtors[i].amount -= pay;
-      creditors[j].amount -= pay;
-      if (debtors[i].amount < 1) i++;
-      if (creditors[j].amount < 1) j++;
-    }
-
-    document.getElementById('settlement-list').innerHTML = settlementHTML || '<p style="color:var(--text-muted); text-align:center;">三大窗口費用剛好平衡，不需轉帳！</p>';
-  }
-
-  function renderPersonAnalysis() {
-    const person = document.getElementById('select-person-analysis').value;
-    if(!person) return;
-
-    let outOfPocket = 0;
-    let sharedCost = 0;
-    let personalSoloCost = 0;
-
-    expenses.forEach(e => {
-      const splitList = Array.isArray(e.splitWith) ? e.splitWith : [];
-      if (e.payer === person) outOfPocket += e.amount;
-      if (splitList.includes(person)) {
-        const share = e.amount / splitList.length;
-        sharedCost += share;
-        if (splitList.length === 1) personalSoloCost += e.amount;
-      }
-    });
-
-    document.getElementById('person-analysis-result').innerHTML = `
-      <div style="line-height: 1.8; font-size: 1.05rem;">
-        <p>💳 <b>${person}</b> 現場代墊付出的總額：<b>$${outOfPocket.toFixed(0)}</b></p>
-        <p>🎯 <b>${person}</b> 個人總應負擔的花費：<b style="color:var(--accent); font-size:1.2rem;">$${sharedCost.toFixed(0)}</b></p>
-        <ul style="font-size:0.95rem; color:var(--text-muted); margin-left:22px; margin-top:6px;">
-          <li>包含個人獨享/個人消費：$${personalSoloCost.toFixed(0)}</li>
-          <li>包含參與團體共同分攤：$${(sharedCost - personalSoloCost).toFixed(0)}</li>
-        </ul>
-      </div>
-    `;
-  }
-
-  function exportToCSV() {
-    if(expenses.length === 0) return alert('目前尚無任何資料可供匯出');
-    let csv = '\uFEFF編號,項目,金額,類別,付款人,分攤成員,狀態\n';
-    expenses.forEach(e => {
-      const list = Array.isArray(e.splitWith) ? e.splitWith.join(';') : e.splitWith;
-      csv += `"${e.id}","${e.title}",${e.amount},"${e.category}","${e.payer}","${list}","${e.status}"\n`;
-    });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `旅遊收支明細_${new Date().toISOString().slice(0,10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
-  init();
-</script>
+                    html += `
+                        <div class="item-row">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <strong>${itemName}</strong>
+                                <span style="font-weight: bold; color: var(--ocean-dark);">$${itemAmt}</span>
+                            </div>
+                            <div style="font-size: 14px; color: #666; margin-top: 4px;">
+                                付款人：<strong>${itemPayer}</strong> | 類別：${itemCat} 
+                                <span class="badge ${badgeClass}" style="margin-left: 6px;">${itemStatus}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                listDiv.innerHTML = html;
+            })
+            .catch(err => {
+                document.getElementById("dataList").innerHTML = "<p style='text-align:center; color:red;'>無法載入資料，請確認 GAS 權限已開啟為「所有人」</p>";
+            });
+        }
+    </script>
 </body>
 </html>
