@@ -145,7 +145,7 @@
     </div>
 
     <div class="card">
-      <h2>👤 個人花費分析</h2>
+      <h2>👤 個人/家族花費分析</h2>
       <div class="form-group">
         <label>選擇查看成員</label>
         <select id="select-person-analysis" onchange="renderPersonAnalysis()"></select>
@@ -154,7 +154,12 @@
     </div>
 
     <div class="card">
-      <h2>🔄 建議最佳結算方案（僅算未結算項目）</h2>
+      <h2>🔄 3 大窗口最終結算（蓉 / 慈 / 沛）</h2>
+      <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:12px;">
+        • 蓉窗口：云、閎、蓉<br>
+        • 慈窗口：慈、吳<br>
+        • 沛窗口：鵬、沛、畯、璇
+      </p>
       <div id="settlement-list">計算中...</div>
     </div>
 
@@ -178,6 +183,41 @@
   let members = JSON.parse(localStorage.getItem('trip_members')) || ['鵬', '沛', '蓉', '云', '閎', '慈', '吳', '畯', '璇'];
   let expenses = [];
 
+  function showLoading(show) {
+    document.getElementById('loading-overlay').style.display = show ? 'block' : 'none';
+  }
+
+  function init() {
+    document.getElementById('member-input').value = members.join(', ');
+    updateMemberSelects();
+    fetchExpenses();
+  }
+
+  function saveMembers() {
+    const input = document.getElementById('member-input').value;
+    const list = input.split(',').map(s => s.trim()).filter(s => s !== '');
+    if(list.length === 0) return alert('請至少輸入一位成員名字');
+    members = list;
+    localStorage.setItem('trip_members', JSON.stringify(members));
+    updateMemberSelects();
+    alert('成員名單已更新！');
+  }
+
+  function updateMemberSelects() {
+    const payerSelect = document.getElementById('exp-payer');
+    const analysisSelect = document.getElementById('select-person-analysis');
+    const container = document.getElementById('split-members-container');
+
+    payerSelect.innerHTML = members.map(m => `<option value="${m}">${m}</option>`).join('');
+    analysisSelect.innerHTML = members.map(m => `<option value="${m}">${m}</option>`).join('');
+
+    container.innerHTML = members.map(m => `
+      <label class="checkbox-item">
+        <input type="checkbox" value="${m}" checked class="split-checkbox"> ${m}
+      </label>
+    `).join('');
+  }
+
   function fetchExpenses() {
     showLoading(true);
     fetch(API_URL)
@@ -185,7 +225,6 @@
       .then(data => {
         expenses = data.map(item => {
           let st = item.status ? String(item.status) : '';
-          // 只要有「已付清」三個字就判定為已付清，其餘一律強制視為「⏳ 未結算」
           let displayStatus = st.includes('已付清') ? '✅ 已付清' : '⏳ 未結算';
           return {
             ...item,
@@ -204,33 +243,15 @@
       });
   }
 
-  function renderExpenses() {
-    const container = document.getElementById('expense-list');
-    if (expenses.length === 0) {
-      container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:10px 0;">目前尚無任何花費紀錄</p>';
-      return;
-    }
-
-    container.innerHTML = expenses.slice().reverse().map(e => {
-      const isDone = e.status.includes('已付清');
-      return `
-        <div class="expense-item">
-          <div class="expense-info">
-            <div class="title" style="display:flex; align-items:center; flex-wrap:wrap; gap:6px;">
-              ${e.title} 
-              <span class="badge">${e.category}</span>
-              <span class="badge ${isDone ? 'badge-done' : 'badge-pending'}">${e.status}</span>
-            </div>
-            <div class="sub">代墊：<b>${e.payer}</b> | 分攤：${Array.isArray(e.splitWith) ? e.splitWith.join(', ') : e.splitWith}</div>
-          </div>
-          <div>
-            <div class="expense-amount">$${e.amount}</div>
-            <button style="color:var(--danger); background:none; border:none; font-size:0.85rem; cursor:pointer; margin-top:4px;" onclick="deleteExpense(${e.id})">刪除</button>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
+  function addExpense() {
+    const title = document.getElementById('exp-title').value.trim();
+    const amount = parseFloat(document.getElementById('exp-amount').value);
+    const category = document.getElementById('exp-category').value;
+    const payer = document.getElementById('exp-payer').value;
+    const status = document.getElementById('exp-status').value;
+    
+    const checkboxes = document.querySelectorAll('.split-checkbox:checked');
+    const splitWith = Array.from(checkboxes).map(cb => cb.value);
 
     if (!title || isNaN(amount) || amount <= 0) return alert('請輸入有效的消費名稱與金額');
     if (splitWith.length === 0) return alert('請至少選擇一位分攤成員');
@@ -283,7 +304,7 @@
       return `
         <div class="expense-item">
           <div class="expense-info">
-            <div class="title">
+            <div class="title" style="display:flex; align-items:center; flex-wrap:wrap; gap:6px;">
               ${e.title} 
               <span class="badge">${e.category}</span>
               <span class="badge ${isDone ? 'badge-done' : 'badge-pending'}">${e.status}</span>
@@ -315,33 +336,54 @@
 
   function calculateSettlement() {
     let totalTrip = 0;
-    let balances = {};
-    members.forEach(m => balances[m] = 0);
+
+    // 3 大窗口成員歸屬定義
+    const groupMap = {
+      '蓉': ['云', '閎', '蓉'],
+      '慈': ['慈', '吳'],
+      '沛': ['鵬', '沛', '畯', '璇']
+    };
+
+    function getRepresentative(person) {
+      for (let rep in groupMap) {
+        if (groupMap[rep].includes(person)) return rep;
+      }
+      return person;
+    }
+
+    let balances = { '蓉': 0, '慈': 0, '沛': 0 };
 
     expenses.forEach(e => {
       totalTrip += e.amount;
       
+      // 僅計算「未結算」的項目
       if (!e.status || !e.status.includes('已付清')) {
-        if (balances[e.payer] !== undefined) balances[e.payer] += e.amount;
+        let payerRep = getRepresentative(e.payer);
+        if (balances[payerRep] !== undefined) {
+          balances[payerRep] += e.amount;
+        }
         
         const splitList = Array.isArray(e.splitWith) ? e.splitWith : [];
         const perHead = splitList.length ? e.amount / splitList.length : 0;
         
         splitList.forEach(m => {
-          if(balances[m] !== undefined) balances[m] -= perHead;
+          let memberRep = getRepresentative(m);
+          if (balances[memberRep] !== undefined) {
+            balances[memberRep] -= perHead;
+          }
         });
       }
     });
 
     document.getElementById('total-summary-stats').innerHTML = `
       <p style="font-size:1.25rem;">全團總花費（含已付清）：<b style="color:var(--accent); font-size:1.4rem;">$${totalTrip.toFixed(0)}</b></p>
-      <p style="font-size:1rem; color:var(--text-muted); margin-top:4px;">全團平均總花費：$${(members.length ? totalTrip/members.length : 0).toFixed(0)} / 人</p>
+      <p style="font-size:1rem; color:var(--text-muted); margin-top:4px;">全團 9 人平均花費：$${(members.length ? totalTrip/members.length : 0).toFixed(0)} / 人</p>
     `;
 
     let debtors = [], creditors = [];
-    for (let m in balances) {
-      if (balances[m] < -1) debtors.push({ name: m, amount: -balances[m] });
-      if (balances[m] > 1) creditors.push({ name: m, amount: balances[m] });
+    for (let rep in balances) {
+      if (balances[rep] < -1) debtors.push({ name: rep, amount: -balances[rep] });
+      if (balances[rep] > 1) creditors.push({ name: rep, amount: balances[rep] });
     }
 
     let settlementHTML = '';
@@ -351,8 +393,10 @@
       let pay = Math.min(debtors[i].amount, creditors[j].amount);
       settlementHTML += `
         <div class="settlement-item">
-          <div class="settlement-text"><b>${debtors[i].name}</b> 應給 <b>${creditors[j].name}</b></div>
-          <div style="color:var(--accent); font-weight:bold; font-size:1.2rem;">$${pay.toFixed(0)}</div>
+          <div class="settlement-text">
+            👑 <b>${debtors[i].name} 窗口</b> 應轉帳給 👑 <b>${creditors[j].name} 窗口</b>
+          </div>
+          <div style="color:var(--accent); font-weight:bold; font-size:1.25rem;">$${pay.toFixed(0)}</div>
         </div>
       `;
       debtors[i].amount -= pay;
@@ -361,7 +405,7 @@
       if (creditors[j].amount < 1) j++;
     }
 
-    document.getElementById('settlement-list').innerHTML = settlementHTML || '<p style="color:var(--text-muted); text-align:center;">所有未結算項目費用皆已平衡！</p>';
+    document.getElementById('settlement-list').innerHTML = settlementHTML || '<p style="color:var(--text-muted); text-align:center;">三大窗口費用剛好平衡，不需轉帳！</p>';
   }
 
   function renderPersonAnalysis() {
