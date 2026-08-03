@@ -52,6 +52,8 @@
     .expense-amount { font-size: 1.25rem; font-weight: bold; color: var(--accent); text-align: right; }
 
     .badge { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; background: var(--primary-light); color: var(--primary); margin-left: 6px; }
+    .badge-done { background: #DEF7EC; color: #03543F; }
+    .badge-pending { background: #FEF08A; color: #713F12; }
 
     .settlement-item { background: var(--primary-light); padding: 14px 16px; border-radius: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
     .settlement-text { font-size: 1.1rem; }
@@ -83,7 +85,7 @@
     <div class="card">
       <h2>👥 旅程成員設定</h2>
       <div class="form-group">
-        <input type="text" id="member-input" placeholder="成員名字（請用逗號分隔，如：鵬, 沛, 蓉, 云, 閎, 慈, 吳, 畯, 璇）">
+        <input type="text" id="member-input" placeholder="成員名字（請用逗號分隔）">
       </div>
       <button class="btn btn-outline" onclick="saveMembers()">更新成員名單</button>
     </div>
@@ -111,12 +113,19 @@
         </select>
       </div>
       <div class="form-group">
-        <label>誰先付的錢？（現場代墊）</label>
+        <label>誰先付的錢？（代墊人）</label>
         <select id="exp-payer"></select>
       </div>
       <div class="form-group">
         <label>這筆費用誰要分攤？</label>
         <div class="checkbox-group" id="split-members-container"></div>
+      </div>
+      <div class="form-group">
+        <label>付款/分帳狀態</label>
+        <select id="exp-status">
+          <option value="⏳ 未結算">⏳ 未結算（由代墊者支付，加入最終總分帳）</option>
+          <option value="✅ 已付清">✅ 已付清（成員已現場付給代墊者，僅做記錄）</option>
+        </select>
       </div>
       <button class="btn" onclick="addExpense()">儲存並同步到雲端</button>
     </div>
@@ -145,7 +154,7 @@
     </div>
 
     <div class="card">
-      <h2>🔄 建議最佳結算方案</h2>
+      <h2>🔄 建議最佳結算方案（僅算未結算項目）</h2>
       <div id="settlement-list">計算中...</div>
     </div>
 
@@ -166,7 +175,6 @@
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbysNFIHtz7NRmcH88rBx0zRzMIy7cyGY2x2BM7IHymy822YNXBuFCj0c_qpW0EWlpw/exec";
 
-  // 預設成員改為：鵬, 沛, 蓉, 云, 閎, 慈, 吳, 畯, 璇
   let members = JSON.parse(localStorage.getItem('trip_members')) || ['鵬', '沛', '蓉', '云', '閎', '慈', '吳', '畯', '璇'];
   let expenses = [];
 
@@ -213,7 +221,8 @@
         expenses = data.map(item => ({
           ...item,
           amount: parseFloat(item.amount),
-          splitWith: typeof item.splitWith === 'string' ? item.splitWith.split(';') : item.splitWith
+          splitWith: typeof item.splitWith === 'string' ? item.splitWith.split(';') : item.splitWith,
+          status: item.status || "⏳ 未結算"
         }));
         renderExpenses();
         showLoading(false);
@@ -230,6 +239,7 @@
     const amount = parseFloat(document.getElementById('exp-amount').value);
     const category = document.getElementById('exp-category').value;
     const payer = document.getElementById('exp-payer').value;
+    const status = document.getElementById('exp-status').value;
     
     const checkboxes = document.querySelectorAll('.split-checkbox:checked');
     const splitWith = Array.from(checkboxes).map(cb => cb.value);
@@ -244,7 +254,8 @@
       amount,
       category,
       payer,
-      splitWith: splitWith.join(';')
+      splitWith: splitWith.join(';'),
+      status
     };
 
     showLoading(true);
@@ -279,18 +290,25 @@
       return;
     }
 
-    container.innerHTML = expenses.slice().reverse().map(e => `
-      <div class="expense-item">
-        <div class="expense-info">
-          <div class="title">${e.title} <span class="badge">${e.category}</span></div>
-          <div class="sub">付款：<b>${e.payer}</b> | 分攤：${Array.isArray(e.splitWith) ? e.splitWith.join(', ') : e.splitWith}</div>
+    container.innerHTML = expenses.slice().reverse().map(e => {
+      const isDone = e.status.includes('已付清');
+      return `
+        <div class="expense-item">
+          <div class="expense-info">
+            <div class="title">
+              ${e.title} 
+              <span class="badge">${e.category}</span>
+              <span class="badge ${isDone ? 'badge-done' : 'badge-pending'}">${e.status}</span>
+            </div>
+            <div class="sub">代墊：<b>${e.payer}</b> | 分攤：${Array.isArray(e.splitWith) ? e.splitWith.join(', ') : e.splitWith}</div>
+          </div>
+          <div>
+            <div class="expense-amount">$${e.amount}</div>
+            <button style="color:var(--danger); background:none; border:none; font-size:0.85rem; cursor:pointer; margin-top:4px;" onclick="deleteExpense(${e.id})">刪除</button>
+          </div>
         </div>
-        <div>
-          <div class="expense-amount">$${e.amount}</div>
-          <button style="color:var(--danger); background:none; border:none; font-size:0.85rem; cursor:pointer; margin-top:4px;" onclick="deleteExpense(${e.id})">刪除</button>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   function switchTab(tab, evt) {
@@ -314,19 +332,23 @@
 
     expenses.forEach(e => {
       totalTrip += e.amount;
-      if (balances[e.payer] !== undefined) balances[e.payer] += e.amount;
       
-      const splitList = Array.isArray(e.splitWith) ? e.splitWith : [];
-      const perHead = splitList.length ? e.amount / splitList.length : 0;
-      
-      splitList.forEach(m => {
-        if(balances[m] !== undefined) balances[m] -= perHead;
-      });
+      // 只有「未結算」的項目才納入最後算帳
+      if (!e.status.includes('已付清')) {
+        if (balances[e.payer] !== undefined) balances[e.payer] += e.amount;
+        
+        const splitList = Array.isArray(e.splitWith) ? e.splitWith : [];
+        const perHead = splitList.length ? e.amount / splitList.length : 0;
+        
+        splitList.forEach(m => {
+          if(balances[m] !== undefined) balances[m] -= perHead;
+        });
+      }
     });
 
     document.getElementById('total-summary-stats').innerHTML = `
-      <p style="font-size:1.25rem;">全團總支出：<b style="color:var(--accent); font-size:1.4rem;">$${totalTrip.toFixed(0)}</b></p>
-      <p style="font-size:1rem; color:var(--text-muted); margin-top:4px;">全團平均花費：$${(members.length ? totalTrip/members.length : 0).toFixed(0)} / 人</p>
+      <p style="font-size:1.25rem;">全團總花費（含已付清）：<b style="color:var(--accent); font-size:1.4rem;">$${totalTrip.toFixed(0)}</b></p>
+      <p style="font-size:1rem; color:var(--text-muted); margin-top:4px;">全團平均總花費：$${(members.length ? totalTrip/members.length : 0).toFixed(0)} / 人</p>
     `;
 
     let debtors = [], creditors = [];
@@ -352,7 +374,7 @@
       if (creditors[j].amount < 1) j++;
     }
 
-    document.getElementById('settlement-list').innerHTML = settlementHTML || '<p style="color:var(--text-muted); text-align:center;">大家費用剛好平衡，不需要額外轉帳！</p>';
+    document.getElementById('settlement-list').innerHTML = settlementHTML || '<p style="color:var(--text-muted); text-align:center;">所有未結算項目費用皆已平衡！</p>';
   }
 
   function renderPersonAnalysis() {
@@ -376,7 +398,7 @@
     document.getElementById('person-analysis-result').innerHTML = `
       <div style="line-height: 1.8; font-size: 1.05rem;">
         <p>💳 <b>${person}</b> 現場代墊付出的總額：<b>$${outOfPocket.toFixed(0)}</b></p>
-        <p>🎯 <b>${person}</b> 個人應負擔的花費總額：<b style="color:var(--accent); font-size:1.2rem;">$${sharedCost.toFixed(0)}</b></p>
+        <p>🎯 <b>${person}</b> 個人總應負擔的花費：<b style="color:var(--accent); font-size:1.2rem;">$${sharedCost.toFixed(0)}</b></p>
         <ul style="font-size:0.95rem; color:var(--text-muted); margin-left:22px; margin-top:6px;">
           <li>包含個人獨享/個人消費：$${personalSoloCost.toFixed(0)}</li>
           <li>包含參與團體共同分攤：$${(sharedCost - personalSoloCost).toFixed(0)}</li>
@@ -387,10 +409,10 @@
 
   function exportToCSV() {
     if(expenses.length === 0) return alert('目前尚無任何資料可供匯出');
-    let csv = '\uFEFF編號,項目,金額,類別,付款人,分攤成員\n';
+    let csv = '\uFEFF編號,項目,金額,類別,付款人,分攤成員,狀態\n';
     expenses.forEach(e => {
       const list = Array.isArray(e.splitWith) ? e.splitWith.join(';') : e.splitWith;
-      csv += `"${e.id}","${e.title}",${e.amount},"${e.category}","${e.payer}","${list}"\n`;
+      csv += `"${e.id}","${e.title}",${e.amount},"${e.category}","${e.payer}","${list}","${e.status}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
