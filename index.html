@@ -47,11 +47,11 @@
 
     .expense-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
     .expense-item:last-child { border-bottom: none; }
-    .expense-info .title { font-weight: bold; font-size: 1.15rem; margin-bottom: 4px; }
+    .expense-info .title { font-weight: bold; font-size: 1.15rem; margin-bottom: 4px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
     .expense-info .sub { font-size: 0.95rem; color: var(--text-muted); }
     .expense-amount { font-size: 1.25rem; font-weight: bold; color: var(--accent); text-align: right; }
 
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; background: var(--primary-light); color: var(--primary); margin-left: 6px; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; background: var(--primary-light); color: var(--primary); }
     .badge-done { background: #DEF7EC; color: #03543F; }
     .badge-pending { background: #FEF08A; color: #713F12; }
 
@@ -218,12 +218,16 @@
     fetch(API_URL)
       .then(res => res.json())
       .then(data => {
-        expenses = data.map(item => ({
-          ...item,
-          amount: parseFloat(item.amount),
-          splitWith: typeof item.splitWith === 'string' ? item.splitWith.split(';') : item.splitWith,
-          status: item.status || "⏳ 未結算"
-        }));
+        expenses = data.map(item => {
+          let rawStatus = item.status ? String(item.status).trim() : '';
+          let finalStatus = rawStatus !== '' ? rawStatus : "⏳ 未結算";
+          return {
+            ...item,
+            amount: parseFloat(item.amount),
+            splitWith: typeof item.splitWith === 'string' ? item.splitWith.split(';') : item.splitWith,
+            status: finalStatus
+          };
+        });
         renderExpenses();
         showLoading(false);
       })
@@ -291,7 +295,7 @@
     }
 
     container.innerHTML = expenses.slice().reverse().map(e => {
-      const isDone = e.status.includes('已付清');
+      const isDone = e.status && e.status.includes('已付清');
       return `
         <div class="expense-item">
           <div class="expense-info">
@@ -333,8 +337,7 @@
     expenses.forEach(e => {
       totalTrip += e.amount;
       
-      // 只有「未結算」的項目才納入最後算帳
-      if (!e.status.includes('已付清')) {
+      if (!e.status || !e.status.includes('已付清')) {
         if (balances[e.payer] !== undefined) balances[e.payer] += e.amount;
         
         const splitList = Array.isArray(e.splitWith) ? e.splitWith : [];
