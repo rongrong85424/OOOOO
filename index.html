@@ -10,7 +10,7 @@
             --card-beige: #F3ECE1;     /* 卡片溫暖米黃色 */
             --ocean-dark: #1F4E5B;     /* 深海洋藍 (主要標題/按鈕) */
             --ocean-light: #2E7D8E;    /* 淺海藍 (次要標題) */
-            --accent-coral: #E0A96D;   /* 沙灘暖色 (強調標示) */
+            --accent-coral: #E0A96D;   /* 沙灘暖色 (強調標記) */
             --text-dark: #2B2B2B;
         }
 
@@ -43,34 +43,84 @@
         label {
             display: block;
             font-weight: bold;
-            margin-top: 12px;
+            margin-top: 14px;
             color: var(--ocean-dark);
             font-size: 16px;
         }
 
-        input, select, button {
+        input[type="text"], input[type="number"], select {
             width: 100%;
             padding: 12px;
             margin-top: 6px;
             border-radius: 10px;
             border: 1px solid #CCC;
-            font-size: 18px; /* 大字體輸入 */
+            font-size: 18px;
             box-sizing: border-box;
             background-color: #FFF;
         }
 
+        /* 複選按鈕區塊樣式 */
+        .member-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 手機版排成三欄，方便點擊 */
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .checkbox-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #FFF;
+            border: 1.5px solid #CCC;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-btn input {
+            display: none; /* 隱藏原本原生的小框框 */
+        }
+
+        /* 被選中的成員樣式 (海洋藍高亮) */
+        .checkbox-btn.active {
+            background-color: var(--ocean-dark);
+            color: white;
+            border-color: var(--ocean-dark);
+        }
+
+        .btn-quick-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .btn-small {
+            flex: 1;
+            padding: 6px;
+            font-size: 14px;
+            background-color: #E8E0D0;
+            border: 1px solid #CCC;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--ocean-dark);
+            font-weight: bold;
+        }
+
         button.btn-primary {
+            width: 100%;
+            padding: 14px;
             background-color: var(--ocean-dark);
             color: white;
             font-weight: bold;
             border: none;
+            border-radius: 10px;
+            font-size: 18px;
             margin-top: 20px;
             cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-
-        button.btn-primary:active {
-            background-color: var(--ocean-light);
         }
 
         button:disabled {
@@ -82,10 +132,6 @@
             border-bottom: 1px solid #E5DCCB;
             padding: 10px 0;
             font-size: 16px;
-        }
-
-        .item-row:last-child {
-            border-bottom: none;
         }
 
         .badge {
@@ -108,7 +154,7 @@
         <h2>📝 新增消費紀錄</h2>
         <form id="expenseForm">
             <label>項目說明</label>
-            <input type="text" id="item" placeholder="例如：第一天晚餐" required>
+            <input type="text" id="item" placeholder="例如：海景晚餐" required>
 
             <label>總金額 ($)</label>
             <input type="number" id="amount" placeholder="9000" required>
@@ -136,8 +182,15 @@
                 <option value="璇">璇</option>
             </select>
 
-            <label>受益/分攤成員 (以逗號分隔)</label>
-            <input type="text" id="members" value="鵬,沛,蓉,云,閎,慈,吳,畯,璇">
+            <!-- 受益/分攤成員 (按鈕式勾選) -->
+            <label>受益/分攤成員 (可多選)</label>
+            <div class="btn-quick-group">
+                <button type="button" class="btn-small" onclick="selectAllMembers(true)">全選 (9人)</button>
+                <button type="button" class="btn-small" onclick="selectAllMembers(false)">全部取消</button>
+            </div>
+            <div class="member-grid" id="memberGrid">
+                <!-- 由 JavaScript 動態生成成員按鈕 -->
+            </div>
 
             <label>是否屬代墊性質？</label>
             <select id="isAdvance">
@@ -162,22 +215,74 @@
     </div>
 
     <script>
-        // 已帶入您提供的 Google Apps Script Web App URL
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyrZzupIe0nuod4zoB4YxLk2VYmeUR5FcLw3cJDmqmbh9WCIkkZFdaHUIe5J--0Mqti/exec";
+        
+        // 設定成員名單
+        const membersList = ["鵬", "沛", "蓉", "云", "閎", "慈", "吳", "畯", "璇"];
 
-        // 頁面開啟時自動向 Google Sheet 載入資料
         window.onload = function() {
+            renderMemberOptions();
             loadData();
         };
 
-        // 1. 送出表單資料到 Google Sheet
+        // 渲染成員勾選按鈕 (預設全選)
+        function renderMemberOptions() {
+            const grid = document.getElementById("memberGrid");
+            grid.innerHTML = "";
+            membersList.forEach(m => {
+                const label = document.createElement("label");
+                label.className = "checkbox-btn active"; // 預設高亮
+                label.innerHTML = `
+                    <input type="checkbox" name="memberChoice" value="${m}" checked onchange="toggleMemberBtn(this)">
+                    ${m}
+                `;
+                grid.appendChild(label);
+            });
+        }
+
+        // 切換成員按鈕選取樣式
+        function toggleMemberBtn(checkbox) {
+            const parent = checkbox.parentElement;
+            if (checkbox.checked) {
+                parent.classList.add("active");
+            } else {
+                parent.classList.remove("active");
+            }
+        }
+
+        // 全選 / 清除成員按鈕
+        function selectAllMembers(select) {
+            const checkboxes = document.getElementsByName("memberChoice");
+            checkboxes.forEach(cb => {
+                cb.checked = select;
+                toggleMemberBtn(cb);
+            });
+        }
+
+        // 取得目前被勾選的成員（以逗號分隔）
+        function getSelectedMembers() {
+            const checkboxes = document.getElementsByName("memberChoice");
+            const selected = [];
+            checkboxes.forEach(cb => {
+                if (cb.checked) selected.push(cb.value);
+            });
+            return selected.join(",");
+        }
+
+        // 送出表單資料到 Google Sheet
         function submitData() {
             const submitBtn = document.getElementById("submitBtn");
             const item = document.getElementById("item").value;
             const amount = document.getElementById("amount").value;
+            const selectedMembers = getSelectedMembers();
 
             if (!item || !amount) {
                 alert("請填寫項目說明與金額！");
+                return;
+            }
+
+            if (!selectedMembers) {
+                alert("請至少選擇一位受益/分攤成員！");
                 return;
             }
 
@@ -189,25 +294,24 @@
                 amount: amount,
                 category: document.getElementById("category").value,
                 payer: document.getElementById("payer").value,
-                members: document.getElementById("members").value,
+                members: selectedMembers, // 取得勾選的成員字串
                 isAdvance: document.getElementById("isAdvance").value,
                 settleStatus: document.getElementById("settleStatus").value
             };
 
             fetch(GAS_API_URL, {
                 method: "POST",
-                mode: "no-cors", // 跨網域存取 (CORS) 必備
+                mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             })
             .then(() => {
                 alert("✅ 成功新增並同步至 Google Sheet！");
                 document.getElementById("expenseForm").reset();
-                document.getElementById("members").value = "鵬,沛,蓉,云,閎,慈,吳,畯,璇";
+                selectAllMembers(true); // 重置成員為預設全選
                 submitBtn.disabled = false;
                 submitBtn.innerText = "同步至 Google Sheet";
                 
-                // 1.5 秒後自動刷新明細清單
                 setTimeout(loadData, 1500);
             })
             .catch(err => {
@@ -217,7 +321,7 @@
             });
         }
 
-        // 2. 從 Google Sheet 讀取最新明細
+        // 從 Google Sheet 讀取最新明細
         function loadData() {
             fetch(GAS_API_URL)
             .then(res => res.json())
@@ -229,11 +333,11 @@
                 }
 
                 let html = "";
-                // 將最新新增的紀錄顯示在最上方
                 data.slice().reverse().forEach(row => {
                     const itemName = row["項目說明"] || row.item || "未命名項目";
                     const itemAmt = row["總金額"] || row.amount || 0;
                     const itemPayer = row["實際代墊者"] || row.payer || "未知";
+                    const itemMembers = row["受益/分攤成員"] || row.members || "全體";
                     const itemCat = row["類別"] || row.category || "雜費";
                     const itemStatus = row["是否已分帳/結清"] || row.settleStatus || "未分帳";
 
@@ -246,7 +350,10 @@
                                 <span style="font-weight: bold; color: var(--ocean-dark);">$${itemAmt}</span>
                             </div>
                             <div style="font-size: 14px; color: #666; margin-top: 4px;">
-                                付款人：<strong>${itemPayer}</strong> | 類別：${itemCat} 
+                                代墊人：<strong>${itemPayer}</strong> | 分攤：${itemMembers}
+                            </div>
+                            <div style="font-size: 14px; color: #666; margin-top: 2px;">
+                                類別：${itemCat} 
                                 <span class="badge ${badgeClass}" style="margin-left: 6px;">${itemStatus}</span>
                             </div>
                         </div>
@@ -255,7 +362,7 @@
                 listDiv.innerHTML = html;
             })
             .catch(err => {
-                document.getElementById("dataList").innerHTML = "<p style='text-align:center; color:red;'>無法載入資料，請確認 GAS 權限已開啟為「所有人」</p>";
+                document.getElementById("dataList").innerHTML = "<p style='text-align:center; color:red;'>資料讀取中/失敗，請確認 Google Apps Script 部署設定</p>";
             });
         }
     </script>
