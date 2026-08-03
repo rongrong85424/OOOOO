@@ -3,307 +3,197 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>互動式個人官網 / 作品集</title>
+  <title>旅遊分帳與收支小幫手</title>
   <style>
     :root {
-      --bg-color: #f8f9fa;
-      --card-bg: #ffffff;
-      --text-color: #212529;
-      --text-muted: #6c757d;
-      --primary: #0070f3;
-      --primary-hover: #0051a8;
-      --border-color: #e9ecef;
-      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+      --primary: #4a90e2;
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --text: #333333;
+      --border: #e1e4e8;
     }
-
-    [data-theme="dark"] {
-      --bg-color: #121212;
-      --card-bg: #1e1e1e;
-      --text-color: #f8f9fa;
-      --text-muted: #a0a0a0;
-      --primary: #388e3c;
-      --primary-hover: #2e7d32;
-      --border-color: #333333;
-      --shadow: 0 4px 20px rgba(0,0,0,0.5);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      transition: background-color 0.3s, color 0.3s;
-    }
-
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      line-height: 1.6;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      padding-bottom: 3rem;
-    }
-
-    /* Navbar & Theme Toggle */
-    nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 1.5rem 1rem;
-    }
-
-    .theme-btn {
-      background: none;
-      border: 1px solid var(--border-color);
-      color: var(--text-color);
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    /* Hero Header */
-    header {
-      text-align: center;
-      padding: 3rem 1rem;
-    }
-
-    header h1 {
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    main {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 0 1rem;
-    }
-
-    /* Filter Buttons */
-    .filter-container {
-      display: flex;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .filter-btn {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      color: var(--text-color);
-      padding: 0.5rem 1.2rem;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .filter-btn.active {
-      background-color: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-
-    /* Grid Gallery */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 3rem;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      cursor: pointer;
-      border: 1px solid var(--border-color);
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-    }
-
-    .card h3 {
-      margin-bottom: 0.5rem;
-    }
-
-    .card p {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    /* Form Section */
-    .contact-card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border-color);
-    }
-
-    .form-group {
-      margin-bottom: 1rem;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: bold;
-    }
-
-    input, textarea {
-      width: 100%;
-      padding: 0.75rem;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-      background: var(--bg-color);
-      color: var(--text-color);
-    }
-
-    .submit-btn {
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    /* Modal / Lightbox */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.6);
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-content {
-      background: var(--card-bg);
-      padding: 2rem;
-      border-radius: 12px;
-      max-width: 500px;
-      width: 90%;
-      position: relative;
-    }
-
-    .close-btn {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 1.5rem 1rem; }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 1.5rem; color: #2c3e50; }
+    .card { background: var(--card); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .card h2 { font-size: 1.1rem; margin-bottom: 0.8rem; color: var(--primary); }
+    .input-group { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+    input, select { flex: 1; padding: 0.6rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; }
+    button { background: var(--primary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    button:hover { opacity: 0.9; }
+    .member-tag { display: inline-block; background: #eef5ff; color: var(--primary); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; margin: 0.2rem; }
+    ul { list-style: none; }
+    li { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+    .settle-item { background: #eefbfa; border-left: 4px solid #2ec4b6; padding: 0.8rem; margin-bottom: 0.5rem; border-radius: 4px; font-weight: 500; }
+    .del-btn { background: #ff4d4f; padding: 0.2rem 0.5rem; font-size: 0.8rem; }
   </style>
 </head>
 <body>
 
-  <nav>
-    <strong>MyBrand</strong>
-    <button class="theme-btn" onclick="toggleTheme()">🌙 切換深色模式</button>
-  </nav>
+<div class="container">
+  <h1>✈️ 旅遊分帳小幫手</h1>
 
-  <header>
-    <h1>互動式個人作品官網</h1>
-    <p>點擊下方按鈕切換分類，或是點擊卡片查看詳細內容！</p>
-  </header>
-
-  <main>
-    <div class="filter-container">
-      <button class="filter-btn active" onclick="filterItems('all', this)">全部</button>
-      <button class="filter-btn" onclick="filterItems('web', this)">網頁設計</button>
-      <button class="filter-btn" onclick="filterItems('app', this)">App 開發</button>
+  <!-- 1. 成員管理 -->
+  <div class="card">
+    <h2>1. 設定同行成員</h2>
+    <div class="input-group">
+      <input type="text" id="memberName" placeholder="輸入成員名字（如：小明）">
+      <button onclick="addMember()">新增</button>
     </div>
+    <div id="memberList"></div>
+  </div>
 
-    <div class="grid">
-      <div class="card" data-category="web" onclick="openModal('響應式電商官網', '這是一個具備購物車與金流整合的網站專案。')">
-        <h3>響應式電商官網</h3>
-        <p>【網頁設計】點擊查看詳情...</p>
-      </div>
-      <div class="card" data-category="app" onclick="openModal('健身紀錄 App', '專為運動愛好者設計的追蹤與數據統計應用程式。')">
-        <h3>健身紀錄 App</h3>
-        <p>【App 開發】點擊查看詳情...</p>
-      </div>
-      <div class="card" data-category="web" onclick="openModal('企業品牌形象頁', '乾淨大氣的單頁式企業介紹網頁。')">
-        <h3>企業品牌形象頁</h3>
-        <p>【網頁設計】點擊查看詳情...</p>
-      </div>
+  <!-- 2. 新增消費 -->
+  <div class="card">
+    <h2>2. 新增消費紀錄</h2>
+    <div class="input-group">
+      <input type="text" id="expenseTitle" placeholder="消費項目（如：晚餐、飯店）">
+      <input type="number" id="expenseAmount" placeholder="金額 ($)">
     </div>
-
-    <div class="contact-card">
-      <h2>聯絡我</h2>
-      <form id="contactForm" onsubmit="handleFormSubmit(event)">
-        <div class="form-group">
-          <label for="name">您的姓名</label>
-          <input type="text" id="name" required placeholder="請輸入姓名">
-        </div>
-        <div class="form-group">
-          <label for="message">訊息內容</label>
-          <textarea id="message" rows="4" required placeholder="想跟我說些什麼？"></textarea>
-        </div>
-        <button type="submit" class="submit-btn">發送訊息</button>
-      </form>
-    </div>
-  </main>
-
-  <div class="modal" id="modal" onclick="closeModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <span class="close-btn" onclick="closeModal()">&times;</span>
-      <h2 id="modalTitle">標題</h2>
-      <p id="modalBody" style="margin-top: 1rem;">內容說明...</p>
+    <div class="input-group">
+      <select id="payerSelect"><option value="">誰先墊錢？</option></select>
+      <button onclick="addExpense()">記一筆</button>
     </div>
   </div>
 
-  <script>
-    // 1. 深色模式切換
-    function toggleTheme() {
-      const body = document.body;
-      const themeBtn = document.querySelector('.theme-btn');
-      if (body.getAttribute('data-theme') === 'dark') {
-        body.removeAttribute('data-theme');
-        themeBtn.textContent = '🌙 切換深色模式';
-      } else {
-        body.setAttribute('data-theme', 'dark');
-        themeBtn.textContent = '☀️ 切換亮色模式';
-      }
+  <!-- 3. 消費明細列表 -->
+  <div class="card">
+    <h2>3. 所有消費明細</h2>
+    <ul id="expenseList"></ul>
+  </div>
+
+  <!-- 4. 結算結果 -->
+  <div class="card">
+    <h2>4. 最終分帳結果（誰給誰多少錢）</h2>
+    <div id="settlementList"></div>
+  </div>
+</div>
+
+<script>
+  let members = [];
+  let expenses = [];
+
+  // 新增成員
+  function addMember() {
+    const input = document.getElementById('memberName');
+    const name = input.value.trim();
+    if (!name) return alert('請輸入姓名！');
+    if (members.includes(name)) return alert('成員名稱重複！');
+
+    members.push(name);
+    input.value = '';
+    renderMembers();
+    updatePayerSelect();
+    calculateSettlement();
+  }
+
+  function renderMembers() {
+    const list = document.getElementById('memberList');
+    list.innerHTML = members.map(m => `<span class="member-tag">👤 ${m}</span>`).join('');
+  }
+
+  function updatePayerSelect() {
+    const select = document.getElementById('payerSelect');
+    select.innerHTML = '<option value="">誰先墊錢？</option>' + 
+      members.map(m => `<option value="${m}">${m}</option>`).join('');
+  }
+
+  // 新增消費紀錄
+  function addExpense() {
+    const title = document.getElementById('expenseTitle').value.trim();
+    const amount = parseFloat(document.getElementById('expenseAmount').value);
+    const payer = document.getElementById('payerSelect').value;
+
+    if (!title || isNaN(amount) || amount <= 0 || !payer) {
+      return alert('請填寫完整資訊（項目、金額與付款人）！');
+    }
+    if (members.length === 0) return alert('請先新增同行成員！');
+
+    expenses.push({ id: Date.now(), title, amount, payer });
+    document.getElementById('expenseTitle').value = '';
+    document.getElementById('expenseAmount').value = '';
+
+    renderExpenses();
+    calculateSettlement();
+  }
+
+  function renderExpenses() {
+    const list = document.getElementById('expenseList');
+    if (expenses.length === 0) {
+      list.innerHTML = '<li style="color:#888;">尚未有任何消費紀錄</li>';
+      return;
+    }
+    list.innerHTML = expenses.map(e => `
+      <li>
+        <span><strong>${e.title}</strong> - $${e.amount} <small>(${e.payer} 付款)</small></span>
+        <button class="del-btn" onclick="deleteExpense(${e.id})">刪除</button>
+      </li>
+    `).join('');
+  }
+
+  function deleteExpense(id) {
+    expenses = expenses.filter(e => e.id !== id);
+    renderExpenses();
+    calculateSettlement();
+  }
+
+  // 自動計算分帳演算法
+  function calculateSettlement() {
+    const resultDiv = document.getElementById('settlementList');
+    if (members.length === 0 || expenses.length === 0) {
+      resultDiv.innerHTML = '<p style="color:#888;">加入成員與消費後自動計算</p>';
+      return;
     }
 
-    // 2. 作品分類過濾
-    function filterItems(category, btn) {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+    // 初始化所有人的收支平衡 (應收/應付)
+    let balance = {};
+    members.forEach(m => balance[m] = 0);
 
-      const cards = document.querySelectorAll('.card');
-      cards.forEach(card => {
-        if (category === 'all' || card.getAttribute('data-category') === category) {
-          card.style.display = 'block';
-        } else {
-          card.style.display = 'none';
-        }
-      });
+    // 計算每筆消費平均分配
+    const totalPeople = members.length;
+    expenses.forEach(e => {
+      const perPerson = e.amount / totalPeople;
+      // 付款人 +總額，但所有人（包含付款人）都要扣除均分額
+      balance[e.payer] += e.amount;
+      members.forEach(m => balance[m] -= perPerson);
+    });
+
+    // 分離欠錢者 (Debtors) 與該收錢者 (Creditors)
+    let debtors = [];
+    let creditors = [];
+
+    for (let m in balance) {
+      let b = Math.round(balance[m]); // 四捨五入到整數
+      if (b < -1) debtors.push({ name: m, amount: -b });
+      else if (b > 1) creditors.push({ name: m, amount: b });
     }
 
-    // 3. 彈出視窗（Lightbox）
-    function openModal(title, text) {
-      document.getElementById('modalTitle').textContent = title;
-      document.getElementById('modalBody').textContent = text;
-      document.getElementById('modal').style.display = 'flex';
+    // 計算最佳轉帳路徑
+    let settlements = [];
+    let i = 0, j = 0;
+
+    while (i < debtors.length && j < creditors.length) {
+      let debt = debtors[i].amount;
+      let credit = creditors[j].amount;
+      let payAmount = Math.min(debt, credit);
+
+      settlements.push(`<strong>${debtors[i].name}</strong> 應支付 <strong>$${payAmount}</strong> 給 <strong>${creditors[j].name}</strong>`);
+
+      debtors[i].amount -= payAmount;
+      creditors[j].amount -= payAmount;
+
+      if (debtors[i].amount < 1) i++;
+      if (creditors[j].amount < 1) j++;
     }
 
-    function closeModal(event) {
-      document.getElementById('modal').style.display = 'none';
+    if (settlements.length === 0) {
+      resultDiv.innerHTML = '<div class="settle-item">🎉 目前大家都結清了，互不相欠！</div>';
+    } else {
+      resultDiv.innerHTML = settlements.map(s => `<div class="settle-item">💵 ${s}</div>`).join('');
     }
-
-    // 4. 表單提交模擬
-    function handleFormSubmit(event) {
-      event.preventDefault();
-      const name = document.getElementById('name').value;
-      alert(`謝謝你，${name}！訊息已成功傳送。`);
-      document.getElementById('contactForm').reset();
-    }
-  </script>
+  }
+</script>
 
 </body>
 </html>
