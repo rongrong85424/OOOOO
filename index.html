@@ -1,370 +1,85 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌊 旅遊記帳與分帳助手</title>
-    <style>
-        :root {
-            --bg-cream: #FAF6F0;       /* 柔和米色背景 */
-            --card-beige: #F3ECE1;     /* 卡片溫暖米黃色 */
-            --ocean-dark: #1F4E5B;     /* 深海洋藍 (主要標題/按鈕) */
-            --ocean-light: #2E7D8E;    /* 淺海藍 (次要標題) */
-            --accent-coral: #E0A96D;   /* 沙灘暖色 (強調標記) */
-            --text-dark: #2B2B2B;
+// 1. 處理網頁「寫入資料」 (POST)
+function doPost(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("消費明細表") || ss.getSheetByName("消費明細") || ss.getSheets()[0];
+    
+    var data = JSON.parse(e.postData.contents);
+    
+    // 計算分攤人數
+    var memberList = data.members ? data.members.split(',') : [];
+    var memberCount = memberList.length || 1;
+    var totalAmount = Number(data.amount) || 0;
+    var avgAmount = totalAmount / memberCount;
+
+    // 正確寫入對應的欄位 (A~J)
+    sheet.appendRow([
+      new Date().toLocaleDateString('zh-TW'), // A: 日期
+      data.item || "",                        // B: 項目說明
+      data.payer || "",                       // C: 實際代墊者
+      data.members || "",                      // D: 受益/分攤成員
+      totalAmount,                            // E: 總金額
+      memberCount,                            // F: 分攤人數
+      avgAmount,                              // G: 每人平均金額
+      data.category || "",                     // H: 類別
+      data.isAdvance || "",                    // I: 是否代墊
+      data.settleStatus || ""                  // J: 是否已分帳/結清
+    ]);
+    
+    return ContentService.createTextOutput(JSON.stringify({"status": "success"}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({"status": "error", "message": err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// 2. 處理網頁「讀取資料」 (GET)
+function doGet(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("消費明細表") || ss.getSheetByName("消費明細") || ss.getSheets()[0];
+    
+    var dataRange = sheet.getDataRange().getValues();
+    
+    // 尋找「日期」標題位於哪一列
+    var headerRowIndex = -1;
+    for (var i = 0; i < dataRange.length; i++) {
+      if (dataRange[i][0] === "日期" || dataRange[i][1] === "項目說明") {
+        headerRowIndex = i;
+        break;
+      }
+    }
+    
+    // 若找不到標題列或沒有資料資料列，回傳空陣列
+    if (headerRowIndex === -1 || dataRange.length <= headerRowIndex + 1) {
+      return ContentService.createTextOutput(JSON.stringify([]))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    var headers = dataRange[headerRowIndex];
+    var result = [];
+    
+    // 從標題列的下一列開始讀取真正數據
+    for (var j = headerRowIndex + 1; j < dataRange.length; j++) {
+      var row = dataRange[j];
+      // 確保不是空行
+      if (row[1] !== "" || row[4] !== "") {
+        var obj = {};
+        for (var k = 0; k < headers.length; k++) {
+          var headerName = headers[k].toString().trim();
+          if (headerName) {
+            obj[headerName] = row[k];
+          }
         }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-cream);
-            color: var(--text-dark);
-            margin: 0;
-            padding: 16px;
-            font-size: 18px; /* 適合手機大字體 */
-            line-height: 1.5;
-        }
-
-        h1, h2 {
-            color: var(--ocean-dark);
-            text-align: center;
-            margin-top: 8px;
-            margin-bottom: 12px;
-        }
-
-        .card {
-            background-color: var(--card-beige);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            border: 1px solid #E5DCCB;
-        }
-
-        label {
-            display: block;
-            font-weight: bold;
-            margin-top: 14px;
-            color: var(--ocean-dark);
-            font-size: 16px;
-        }
-
-        input[type="text"], input[type="number"], select {
-            width: 100%;
-            padding: 12px;
-            margin-top: 6px;
-            border-radius: 10px;
-            border: 1px solid #CCC;
-            font-size: 18px;
-            box-sizing: border-box;
-            background-color: #FFF;
-        }
-
-        /* 複選按鈕區塊樣式 */
-        .member-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 手機版排成三欄，方便點擊 */
-            gap: 10px;
-            margin-top: 8px;
-        }
-
-        .checkbox-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #FFF;
-            border: 1.5px solid #CCC;
-            border-radius: 10px;
-            padding: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .checkbox-btn input {
-            display: none; /* 隱藏原本原生的小框框 */
-        }
-
-        /* 被選中的成員樣式 (海洋藍高亮) */
-        .checkbox-btn.active {
-            background-color: var(--ocean-dark);
-            color: white;
-            border-color: var(--ocean-dark);
-        }
-
-        .btn-quick-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 6px;
-        }
-
-        .btn-small {
-            flex: 1;
-            padding: 6px;
-            font-size: 14px;
-            background-color: #E8E0D0;
-            border: 1px solid #CCC;
-            border-radius: 8px;
-            cursor: pointer;
-            color: var(--ocean-dark);
-            font-weight: bold;
-        }
-
-        button.btn-primary {
-            width: 100%;
-            padding: 14px;
-            background-color: var(--ocean-dark);
-            color: white;
-            font-weight: bold;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            margin-top: 20px;
-            cursor: pointer;
-        }
-
-        button:disabled {
-            background-color: #AAA;
-            cursor: not-allowed;
-        }
-
-        .item-row {
-            border-bottom: 1px solid #E5DCCB;
-            padding: 10px 0;
-            font-size: 16px;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .badge-settled { background-color: #D4EDDA; color: #155724; }
-        .badge-pending { background-color: #F8D7DA; color: #721C24; }
-    </style>
-</head>
-<body>
-
-    <h1>🏖️ 旅遊分帳與明細助手</h1>
-
-    <!-- 消費輸入表單 -->
-    <div class="card">
-        <h2>📝 新增消費紀錄</h2>
-        <form id="expenseForm">
-            <label>項目說明</label>
-            <input type="text" id="item" placeholder="例如：海景晚餐" required>
-
-            <label>總金額 ($)</label>
-            <input type="number" id="amount" placeholder="9000" required>
-
-            <label>消費類別</label>
-            <select id="category">
-                <option value="餐飲">🍽️ 餐飲</option>
-                <option value="交通">🚗 交通</option>
-                <option value="住宿">🏨 住宿</option>
-                <option value="伴手禮">🎁 伴手禮</option>
-                <option value="門票/娛樂">🎟️ 門票/娛樂</option>
-                <option value="雜費">🛒 雜費</option>
-            </select>
-
-            <label>實際代墊者 (主要窗口)</label>
-            <select id="payer">
-                <option value="蓉">蓉 (窗口: 云, 閎, 蓉)</option>
-                <option value="慈">慈 (窗口: 慈, 吳)</option>
-                <option value="沛">沛 (窗口: 鵬, 沛, 畯, 璇)</option>
-                <option value="鵬">鵬</option>
-                <option value="云">云</option>
-                <option value="閎">閎</option>
-                <option value="吳">吳</option>
-                <option value="畯">畯</option>
-                <option value="璇">璇</option>
-            </select>
-
-            <!-- 受益/分攤成員 (按鈕式勾選) -->
-            <label>受益/分攤成員 (可多選)</label>
-            <div class="btn-quick-group">
-                <button type="button" class="btn-small" onclick="selectAllMembers(true)">全選 (9人)</button>
-                <button type="button" class="btn-small" onclick="selectAllMembers(false)">全部取消</button>
-            </div>
-            <div class="member-grid" id="memberGrid">
-                <!-- 由 JavaScript 動態生成成員按鈕 -->
-            </div>
-
-            <label>是否屬代墊性質？</label>
-            <select id="isAdvance">
-                <option value="是">是 (需參與分帳)</option>
-                <option value="否">否 (個人獨立花費)</option>
-            </select>
-
-            <label>分帳狀態</label>
-            <select id="settleStatus">
-                <option value="未分帳">❌ 未分帳</option>
-                <option value="已分帳">✅ 已分帳 / 已付清</option>
-            </select>
-
-            <button type="button" id="submitBtn" class="btn-primary" onclick="submitData()">同步至 Google Sheet</button>
-        </form>
-    </div>
-
-    <!-- 即時連動明細列表 -->
-    <div class="card">
-        <h2>📜 最新消費明細 (同步 Google Sheet)</h2>
-        <div id="dataList">資料讀取中...</div>
-    </div>
-
-    <script>
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyrZzupIe0nuod4zoB4YxLk2VYmeUR5FcLw3cJDmqmbh9WCIkkZFdaHUIe5J--0Mqti/exec";
-        
-        // 設定成員名單
-        const membersList = ["鵬", "沛", "蓉", "云", "閎", "慈", "吳", "畯", "璇"];
-
-        window.onload = function() {
-            renderMemberOptions();
-            loadData();
-        };
-
-        // 渲染成員勾選按鈕 (預設全選)
-        function renderMemberOptions() {
-            const grid = document.getElementById("memberGrid");
-            grid.innerHTML = "";
-            membersList.forEach(m => {
-                const label = document.createElement("label");
-                label.className = "checkbox-btn active"; // 預設高亮
-                label.innerHTML = `
-                    <input type="checkbox" name="memberChoice" value="${m}" checked onchange="toggleMemberBtn(this)">
-                    ${m}
-                `;
-                grid.appendChild(label);
-            });
-        }
-
-        // 切換成員按鈕選取樣式
-        function toggleMemberBtn(checkbox) {
-            const parent = checkbox.parentElement;
-            if (checkbox.checked) {
-                parent.classList.add("active");
-            } else {
-                parent.classList.remove("active");
-            }
-        }
-
-        // 全選 / 清除成員按鈕
-        function selectAllMembers(select) {
-            const checkboxes = document.getElementsByName("memberChoice");
-            checkboxes.forEach(cb => {
-                cb.checked = select;
-                toggleMemberBtn(cb);
-            });
-        }
-
-        // 取得目前被勾選的成員（以逗號分隔）
-        function getSelectedMembers() {
-            const checkboxes = document.getElementsByName("memberChoice");
-            const selected = [];
-            checkboxes.forEach(cb => {
-                if (cb.checked) selected.push(cb.value);
-            });
-            return selected.join(",");
-        }
-
-        // 送出表單資料到 Google Sheet
-        function submitData() {
-            const submitBtn = document.getElementById("submitBtn");
-            const item = document.getElementById("item").value;
-            const amount = document.getElementById("amount").value;
-            const selectedMembers = getSelectedMembers();
-
-            if (!item || !amount) {
-                alert("請填寫項目說明與金額！");
-                return;
-            }
-
-            if (!selectedMembers) {
-                alert("請至少選擇一位受益/分攤成員！");
-                return;
-            }
-
-            submitBtn.disabled = true;
-            submitBtn.innerText = "同步至 Google Sheet 中...";
-
-            const payload = {
-                item: item,
-                amount: amount,
-                category: document.getElementById("category").value,
-                payer: document.getElementById("payer").value,
-                members: selectedMembers, // 取得勾選的成員字串
-                isAdvance: document.getElementById("isAdvance").value,
-                settleStatus: document.getElementById("settleStatus").value
-            };
-
-            fetch(GAS_API_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            })
-            .then(() => {
-                alert("✅ 成功新增並同步至 Google Sheet！");
-                document.getElementById("expenseForm").reset();
-                selectAllMembers(true); // 重置成員為預設全選
-                submitBtn.disabled = false;
-                submitBtn.innerText = "同步至 Google Sheet";
-                
-                setTimeout(loadData, 1500);
-            })
-            .catch(err => {
-                alert("❌ 同步失敗：" + err);
-                submitBtn.disabled = false;
-                submitBtn.innerText = "同步至 Google Sheet";
-            });
-        }
-
-        // 從 Google Sheet 讀取最新明細
-        function loadData() {
-            fetch(GAS_API_URL)
-            .then(res => res.json())
-            .then(data => {
-                const listDiv = document.getElementById("dataList");
-                if (!data || data.length === 0) {
-                    listDiv.innerHTML = "<p style='text-align:center;'>目前尚無紀錄</p>";
-                    return;
-                }
-
-                let html = "";
-                data.slice().reverse().forEach(row => {
-                    const itemName = row["項目說明"] || row.item || "未命名項目";
-                    const itemAmt = row["總金額"] || row.amount || 0;
-                    const itemPayer = row["實際代墊者"] || row.payer || "未知";
-                    const itemMembers = row["受益/分攤成員"] || row.members || "全體";
-                    const itemCat = row["類別"] || row.category || "雜費";
-                    const itemStatus = row["是否已分帳/結清"] || row.settleStatus || "未分帳";
-
-                    const badgeClass = (itemStatus === "已分帳" || itemStatus === "已結清") ? "badge-settled" : "badge-pending";
-
-                    html += `
-                        <div class="item-row">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <strong>${itemName}</strong>
-                                <span style="font-weight: bold; color: var(--ocean-dark);">$${itemAmt}</span>
-                            </div>
-                            <div style="font-size: 14px; color: #666; margin-top: 4px;">
-                                代墊人：<strong>${itemPayer}</strong> | 分攤：${itemMembers}
-                            </div>
-                            <div style="font-size: 14px; color: #666; margin-top: 2px;">
-                                類別：${itemCat} 
-                                <span class="badge ${badgeClass}" style="margin-left: 6px;">${itemStatus}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-                listDiv.innerHTML = html;
-            })
-            .catch(err => {
-                document.getElementById("dataList").innerHTML = "<p style='text-align:center; color:red;'>資料讀取中/失敗，請確認 Google Apps Script 部署設定</p>";
-            });
-        }
-    </script>
-</body>
-</html>
+        result.push(obj);
+      }
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify([]))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
