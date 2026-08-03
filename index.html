@@ -83,7 +83,7 @@
     <div class="card">
       <h2>👥 旅程成員設定</h2>
       <div class="form-group">
-        <input type="text" id="member-input" placeholder="成員名字（請用逗號分隔，如：小明, 小華, 阿強）">
+        <input type="text" id="member-input" placeholder="成員名字（請用逗號分隔，如：鵬, 沛, 蓉, 云, 閎, 慈, 吳, 畯, 璇）">
       </div>
       <button class="btn btn-outline" onclick="saveMembers()">更新成員名單</button>
     </div>
@@ -164,10 +164,10 @@
 </div>
 
 <script>
-  // 🔴 請將下方的網址替換成您在 Google Apps Script 取得的部署網址
   const API_URL = "https://script.google.com/macros/s/AKfycbysNFIHtz7NRmcH88rBx0zRzMIy7cyGY2x2BM7IHymy822YNXBuFCj0c_qpW0EWlpw/exec";
 
-  let members = JSON.parse(localStorage.getItem('trip_members')) || ['小明', '小華', '阿強'];
+  // 預設成員改為：鵬, 沛, 蓉, 云, 閎, 慈, 吳, 畯, 璇
+  let members = JSON.parse(localStorage.getItem('trip_members')) || ['鵬', '沛', '蓉', '云', '閎', '慈', '吳', '畯', '璇'];
   let expenses = [];
 
   function showLoading(show) {
