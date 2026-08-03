@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>互動式個人官網 / 作品集</title>
+  <style>
+    :root {
+      --bg-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --text-color: #212529;
+      --text-muted: #6c757d;
+      --primary: #0070f3;
+      --primary-hover: #0051a8;
+      --border-color: #e9ecef;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --text-color: #f8f9fa;
+      --text-muted: #a0a0a0;
+      --primary: #388e3c;
+      --primary-hover: #2e7d32;
+      --border-color: #333333;
+      --shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding-bottom: 3rem;
+    }
+
+    /* Navbar & Theme Toggle */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem;
+    }
+
+    .theme-btn {
+      background: none;
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    /* Hero Header */
+    header {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    /* Filter Buttons */
+    .filter-container {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .filter-btn {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      padding: 0.5rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .filter-btn.active {
+      background-color: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* Grid Gallery */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card h3 {
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Form Section */
+    .contact-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    .submit-btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    /* Modal / Lightbox */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      position: relative;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <strong>MyBrand</strong>
+    <button class="theme-btn" onclick="toggleTheme()">🌙 切換深色模式</button>
+  </nav>
+
+  <header>
+    <h1>互動式個人作品官網</h1>
+    <p>點擊下方按鈕切換分類，或是點擊卡片查看詳細內容！</p>
+  </header>
+
+  <main>
+    <div class="filter-container">
+      <button class="filter-btn active" onclick="filterItems('all', this)">全部</button>
+      <button class="filter-btn" onclick="filterItems('web', this)">網頁設計</button>
+      <button class="filter-btn" onclick="filterItems('app', this)">App 開發</button>
+    </div>
+
+    <div class="grid">
+      <div class="card" data-category="web" onclick="openModal('響應式電商官網', '這是一個具備購物車與金流整合的網站專案。')">
+        <h3>響應式電商官網</h3>
+        <p>【網頁設計】點擊查看詳情...</p>
+      </div>
+      <div class="card" data-category="app" onclick="openModal('健身紀錄 App', '專為運動愛好者設計的追蹤與數據統計應用程式。')">
+        <h3>健身紀錄 App</h3>
+        <p>【App 開發】點擊查看詳情...</p>
+      </div>
+      <div class="card" data-category="web" onclick="openModal('企業品牌形象頁', '乾淨大氣的單頁式企業介紹網頁。')">
+        <h3>企業品牌形象頁</h3>
+        <p>【網頁設計】點擊查看詳情...</p>
+      </div>
+    </div>
+
+    <div class="contact-card">
+      <h2>聯絡我</h2>
+      <form id="contactForm" onsubmit="handleFormSubmit(event)">
+        <div class="form-group">
+          <label for="name">您的姓名</label>
+          <input type="text" id="name" required placeholder="請輸入姓名">
+        </div>
+        <div class="form-group">
+          <label for="message">訊息內容</label>
+          <textarea id="message" rows="4" required placeholder="想跟我說些什麼？"></textarea>
+        </div>
+        <button type="submit" class="submit-btn">發送訊息</button>
+      </form>
+    </div>
+  </main>
+
+  <div class="modal" id="modal" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <h2 id="modalTitle">標題</h2>
+      <p id="modalBody" style="margin-top: 1rem;">內容說明...</p>
+    </div>
+  </div>
+
+  <script>
+    // 1. 深色模式切換
+    function toggleTheme() {
+      const body = document.body;
+      const themeBtn = document.querySelector('.theme-btn');
+      if (body.getAttribute('data-theme') === 'dark') {
+        body.removeAttribute('data-theme');
+        themeBtn.textContent = '🌙 切換深色模式';
+      } else {
+        body.setAttribute('data-theme', 'dark');
+        themeBtn.textContent = '☀️ 切換亮色模式';
+      }
+    }
+
+    // 2. 作品分類過濾
+    function filterItems(category, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const cards = document.querySelectorAll('.card');
+      cards.forEach(card => {
+        if (category === 'all' || card.getAttribute('data-category') === category) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // 3. 彈出視窗（Lightbox）
+    function openModal(title, text) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').textContent = text;
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal(event) {
+      document.getElementById('modal').style.display = 'none';
+    }
+
+    // 4. 表單提交模擬
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      const name = document.getElementById('name').value;
+      alert(`謝謝你，${name}！訊息已成功傳送。`);
+      document.getElementById('contactForm').reset();
+    }
+  </script>
+
+</body>
+</html>
