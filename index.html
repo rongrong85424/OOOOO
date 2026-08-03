@@ -178,54 +178,20 @@
   let members = JSON.parse(localStorage.getItem('trip_members')) || ['鵬', '沛', '蓉', '云', '閎', '慈', '吳', '畯', '璇'];
   let expenses = [];
 
-  function showLoading(show) {
-    document.getElementById('loading-overlay').style.display = show ? 'block' : 'none';
-  }
-
-  function init() {
-    document.getElementById('member-input').value = members.join(', ');
-    updateMemberSelects();
-    fetchExpenses();
-  }
-
-  function saveMembers() {
-    const input = document.getElementById('member-input').value;
-    const list = input.split(',').map(s => s.trim()).filter(s => s !== '');
-    if(list.length === 0) return alert('請至少輸入一位成員名字');
-    members = list;
-    localStorage.setItem('trip_members', JSON.stringify(members));
-    updateMemberSelects();
-    alert('成員名單已更新！');
-  }
-
-  function updateMemberSelects() {
-    const payerSelect = document.getElementById('exp-payer');
-    const analysisSelect = document.getElementById('select-person-analysis');
-    const container = document.getElementById('split-members-container');
-
-    payerSelect.innerHTML = members.map(m => `<option value="${m}">${m}</option>`).join('');
-    analysisSelect.innerHTML = members.map(m => `<option value="${m}">${m}</option>`).join('');
-
-    container.innerHTML = members.map(m => `
-      <label class="checkbox-item">
-        <input type="checkbox" value="${m}" checked class="split-checkbox"> ${m}
-      </label>
-    `).join('');
-  }
-
   function fetchExpenses() {
     showLoading(true);
     fetch(API_URL)
       .then(res => res.json())
       .then(data => {
         expenses = data.map(item => {
-          let rawStatus = item.status ? String(item.status).trim() : '';
-          let finalStatus = rawStatus !== '' ? rawStatus : "⏳ 未結算";
+          let st = item.status ? String(item.status) : '';
+          // 只要有「已付清」三個字就判定為已付清，其餘一律強制視為「⏳ 未結算」
+          let displayStatus = st.includes('已付清') ? '✅ 已付清' : '⏳ 未結算';
           return {
             ...item,
             amount: parseFloat(item.amount),
             splitWith: typeof item.splitWith === 'string' ? item.splitWith.split(';') : item.splitWith,
-            status: finalStatus
+            status: displayStatus
           };
         });
         renderExpenses();
@@ -238,15 +204,33 @@
       });
   }
 
-  function addExpense() {
-    const title = document.getElementById('exp-title').value.trim();
-    const amount = parseFloat(document.getElementById('exp-amount').value);
-    const category = document.getElementById('exp-category').value;
-    const payer = document.getElementById('exp-payer').value;
-    const status = document.getElementById('exp-status').value;
-    
-    const checkboxes = document.querySelectorAll('.split-checkbox:checked');
-    const splitWith = Array.from(checkboxes).map(cb => cb.value);
+  function renderExpenses() {
+    const container = document.getElementById('expense-list');
+    if (expenses.length === 0) {
+      container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:10px 0;">目前尚無任何花費紀錄</p>';
+      return;
+    }
+
+    container.innerHTML = expenses.slice().reverse().map(e => {
+      const isDone = e.status.includes('已付清');
+      return `
+        <div class="expense-item">
+          <div class="expense-info">
+            <div class="title" style="display:flex; align-items:center; flex-wrap:wrap; gap:6px;">
+              ${e.title} 
+              <span class="badge">${e.category}</span>
+              <span class="badge ${isDone ? 'badge-done' : 'badge-pending'}">${e.status}</span>
+            </div>
+            <div class="sub">代墊：<b>${e.payer}</b> | 分攤：${Array.isArray(e.splitWith) ? e.splitWith.join(', ') : e.splitWith}</div>
+          </div>
+          <div>
+            <div class="expense-amount">$${e.amount}</div>
+            <button style="color:var(--danger); background:none; border:none; font-size:0.85rem; cursor:pointer; margin-top:4px;" onclick="deleteExpense(${e.id})">刪除</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
 
     if (!title || isNaN(amount) || amount <= 0) return alert('請輸入有效的消費名稱與金額');
     if (splitWith.length === 0) return alert('請至少選擇一位分攤成員');
