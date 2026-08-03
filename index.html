@@ -1,199 +1,379 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>旅遊分帳與收支小幫手</title>
+  <title>海洋風旅遊分帳記帳本</title>
   <style>
     :root {
-      --primary: #4a90e2;
-      --bg: #f4f6f8;
-      --card: #ffffff;
+      --bg-color: #FDFBF7;
+      --card-bg: #FFFFFF;
+      --primary: #2E7D9E;
+      --primary-light: #EBF4F6;
+      --secondary: #5C9EAD;
+      --accent: #D9822B;
       --text: #333333;
-      --border: #e1e4e8;
+      --text-muted: #666666;
+      --border: #E2E8F0;
+      --success: #28A745;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 1.5rem 1rem; }
-    .container { max-width: 600px; margin: 0 auto; }
-    h1 { text-align: center; margin-bottom: 1.5rem; color: #2c3e50; }
-    .card { background: var(--card); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-    .card h2 { font-size: 1.1rem; margin-bottom: 0.8rem; color: var(--primary); }
-    .input-group { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
-    input, select { flex: 1; padding: 0.6rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; }
-    button { background: var(--primary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 6px; cursor: pointer; font-weight: bold; }
-    button:hover { opacity: 0.9; }
-    .member-tag { display: inline-block; background: #eef5ff; color: var(--primary); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; margin: 0.2rem; }
-    ul { list-style: none; }
-    li { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
-    .settle-item { background: #eefbfa; border-left: 4px solid #2ec4b6; padding: 0.8rem; margin-bottom: 0.5rem; border-radius: 4px; font-weight: 500; }
-    .del-btn { background: #ff4d4f; padding: 0.2rem 0.5rem; font-size: 0.8rem; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text); font-size: 18px; line-height: 1.5; padding-bottom: 80px; }
+
+    header { background-color: var(--primary); color: white; text-align: center; padding: 20px 15px; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    header h1 { font-size: 1.6rem; margin-bottom: 5px; }
+
+    .container { padding: 15px; max-width: 600px; margin: 0 auto; }
+
+    .card { background: var(--card-bg); border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(46,125,158,0.08); border: 1px solid var(--border); }
+    .card h2 { font-size: 1.3rem; color: var(--primary); border-bottom: 2px solid var(--primary-light); padding-bottom: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 1rem; color: var(--text); }
+    input[type="text"], input[type="number"], select { width: 100%; padding: 12px; font-size: 1.1rem; border: 1.5px solid var(--border); border-radius: 10px; background-color: #FAFAFA; outline: none; }
+    input:focus, select:focus { border-color: var(--secondary); background-color: #fff; }
+
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; }
+    .checkbox-item { background: var(--primary-light); padding: 8px 14px; border-radius: 20px; font-size: 1rem; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .checkbox-item input { transform: scale(1.3); }
+
+    .btn { display: width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; text-align: center; width: 100%; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+    .btn:active { transform: translateY(1px); }
+    .btn-secondary { background: var(--secondary); margin-top: 10px; }
+    .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); box-shadow: none; }
+
+    .expense-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .expense-item:last-child { border-bottom: none; }
+    .expense-info .title { font-weight: bold; font-size: 1.1rem; }
+    .expense-info .sub { font-size: 0.9rem; color: var(--text-muted); }
+    .expense-amount { font-size: 1.2rem; font-weight: bold; color: var(--accent); text-align: right; }
+
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: normal; background: var(--primary-light); color: var(--primary); }
+
+    .settlement-item { background: var(--primary-light); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .settlement-text { font-size: 1.05rem; }
+    .status-btn { padding: 6px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; border: none; cursor: pointer; }
+    .status-pending { background: #FFE2E2; color: #C53030; }
+    .status-done { background: #DEF7EC; color: #03543F; }
+
+    .nav-tabs { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
+    .tab-btn { flex: 1; padding: 12px 0; text-align: center; font-size: 0.95rem; font-weight: bold; color: var(--text-muted); border: none; background: none; }
+    .tab-btn.active { color: var(--primary); border-top: 3px solid var(--primary); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
   </style>
 </head>
 <body>
 
+<header>
+  <h1>🌊 旅遊收支分帳本</h1>
+</header>
+
 <div class="container">
-  <h1>✈️ 旅遊分帳小幫手</h1>
 
-  <!-- 1. 成員管理 -->
-  <div class="card">
-    <h2>1. 設定同行成員</h2>
-    <div class="input-group">
-      <input type="text" id="memberName" placeholder="輸入成員名字（如：小明）">
-      <button onclick="addMember()">新增</button>
+  <!-- 1. 記帳與列表頁面 -->
+  <div id="tab-records" class="tab-content active">
+    <!-- 成員設定 -->
+    <div class="card">
+      <h2>👥 旅遊成員</h2>
+      <div class="form-group">
+        <input type="text" id="member-input" placeholder="輸入成員名字（用逗號分隔，例如：小明, 小華, 阿強）">
+      </div>
+      <button class="btn btn-outline" onclick="saveMembers()">更新成員名單</button>
     </div>
-    <div id="memberList"></div>
-  </div>
 
-  <!-- 2. 新增消費 -->
-  <div class="card">
-    <h2>2. 新增消費紀錄</h2>
-    <div class="input-group">
-      <input type="text" id="expenseTitle" placeholder="消費項目（如：晚餐、飯店）">
-      <input type="number" id="expenseAmount" placeholder="金額 ($)">
+    <!-- 新增花費 -->
+    <div class="card">
+      <h2>➕ 新增支出</h2>
+      <div class="form-group">
+        <label>消費項目描述</label>
+        <input type="text" id="exp-title" placeholder="例如：海鮮晚餐、租車費">
+      </div>
+      <div class="form-group">
+        <label>金額 ($)</label>
+        <input type="number" id="exp-amount" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>類別</label>
+        <select id="exp-category">
+          <option value="🍽️ 餐飲">🍽️ 餐飲</option>
+          <option value="🚗 交通">🚗 交通</option>
+          <option value="🏠 住宿">🏠 住宿</option>
+          <option value="🎁 伴手禮">🎁 伴手禮</option>
+          <option value="🎟️ 門票娛樂">🎟️ 門票娛樂</option>
+          <option value="📦 其他">📦 其他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>誰先付的錢？</label>
+        <select id="exp-payer"></select>
+      </div>
+      <div class="form-group">
+        <label>這筆費用誰要分攤？</label>
+        <div class="checkbox-group" id="split-members-container"></div>
+      </div>
+      <button class="btn" onclick="addExpense()">儲存支出記錄</button>
     </div>
-    <div class="input-group">
-      <select id="payerSelect"><option value="">誰先墊錢？</option></select>
-      <button onclick="addExpense()">記一筆</button>
+
+    <!-- 支出列表 -->
+    <div class="card">
+      <h2>📋 支出明細</h2>
+      <div id="expense-list">無紀錄</div>
     </div>
   </div>
 
-  <!-- 3. 消費明細列表 -->
-  <div class="card">
-    <h2>3. 所有消費明細</h2>
-    <ul id="expenseList"></ul>
+  <!-- 2. 分帳與個人統計頁面 -->
+  <div id="tab-summary" class="tab-content">
+    <div class="card">
+      <h2>📊 旅程費用總覽</h2>
+      <div id="total-summary-stats"></div>
+    </div>
+
+    <div class="card">
+      <h2>👤 個人花費分析</h2>
+      <div class="form-group">
+        <label>選擇查看成員</label>
+        <select id="select-person-analysis" onchange="renderPersonAnalysis()"></select>
+      </div>
+      <div id="person-analysis-result"></div>
+    </div>
+
+    <div class="card">
+      <h2>🔄 建議結算（誰給誰錢）</h2>
+      <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:12px;">點擊狀態按鈕可切換轉帳狀態</p>
+      <div id="settlement-list">計算中...</div>
+    </div>
+
+    <div class="card">
+      <h2>📥 匯出明細</h2>
+      <button class="btn btn-secondary" onclick="exportToCSV()">匯出 CSV 檔案</button>
+    </div>
   </div>
 
-  <!-- 4. 結算結果 -->
-  <div class="card">
-    <h2>4. 最終分帳結果（誰給誰多少錢）</h2>
-    <div id="settlementList"></div>
-  </div>
+</div>
+
+<!-- 底部頁籤導覽列 -->
+<div class="nav-tabs">
+  <button class="tab-btn active" onclick="switchTab('records')">📝 記帳明細</button>
+  <button class="tab-btn" onclick="switchTab('summary')">🧮 結算分帳</button>
 </div>
 
 <script>
-  let members = [];
-  let expenses = [];
+  let members = JSON.parse(localStorage.getItem('trip_members')) || ['小明', '小華', '阿強'];
+  let expenses = JSON.parse(localStorage.getItem('trip_expenses')) || [];
+  let transfers = JSON.parse(localStorage.getItem('trip_transfers')) || {};
 
-  // 新增成員
-  function addMember() {
-    const input = document.getElementById('memberName');
-    const name = input.value.trim();
-    if (!name) return alert('請輸入姓名！');
-    if (members.includes(name)) return alert('成員名稱重複！');
-
-    members.push(name);
-    input.value = '';
-    renderMembers();
-    updatePayerSelect();
-    calculateSettlement();
-  }
-
-  function renderMembers() {
-    const list = document.getElementById('memberList');
-    list.innerHTML = members.map(m => `<span class="member-tag">👤 ${m}</span>`).join('');
-  }
-
-  function updatePayerSelect() {
-    const select = document.getElementById('payerSelect');
-    select.innerHTML = '<option value="">誰先墊錢？</option>' + 
-      members.map(m => `<option value="${m}">${m}</option>`).join('');
-  }
-
-  // 新增消費紀錄
-  function addExpense() {
-    const title = document.getElementById('expenseTitle').value.trim();
-    const amount = parseFloat(document.getElementById('expenseAmount').value);
-    const payer = document.getElementById('payerSelect').value;
-
-    if (!title || isNaN(amount) || amount <= 0 || !payer) {
-      return alert('請填寫完整資訊（項目、金額與付款人）！');
-    }
-    if (members.length === 0) return alert('請先新增同行成員！');
-
-    expenses.push({ id: Date.now(), title, amount, payer });
-    document.getElementById('expenseTitle').value = '';
-    document.getElementById('expenseAmount').value = '';
-
+  function init() {
+    document.getElementById('member-input').value = members.join(', ');
+    updateMemberSelects();
     renderExpenses();
-    calculateSettlement();
   }
 
-  function renderExpenses() {
-    const list = document.getElementById('expenseList');
-    if (expenses.length === 0) {
-      list.innerHTML = '<li style="color:#888;">尚未有任何消費紀錄</li>';
-      return;
-    }
-    list.innerHTML = expenses.map(e => `
-      <li>
-        <span><strong>${e.title}</strong> - $${e.amount} <small>(${e.payer} 付款)</small></span>
-        <button class="del-btn" onclick="deleteExpense(${e.id})">刪除</button>
-      </li>
+  function saveMembers() {
+    const input = document.getElementById('member-input').value;
+    const list = input.split(',').map(s => s.trim()).filter(s => s !== '');
+    if(list.length === 0) return alert('請至少輸入一位成員');
+    members = list;
+    localStorage.setItem('trip_members', JSON.stringify(members));
+    updateMemberSelects();
+    alert('成員名單已更新！');
+  }
+
+  function updateMemberSelects() {
+    const payerSelect = document.getElementById('exp-payer');
+    const analysisSelect = document.getElementById('select-person-analysis');
+    const container = document.getElementById('split-members-container');
+
+    payerSelect.innerHTML = members.map(m => `<option value="${m}">${m}</option>`).join('');
+    analysisSelect.innerHTML = members.map(m => `<option value="${m}">${m}</option>`).join('');
+
+    container.innerHTML = members.map(m => `
+      <label class="checkbox-item">
+        <input type="checkbox" value="${m}" checked class="split-checkbox"> ${m}
+      </label>
     `).join('');
   }
 
-  function deleteExpense(id) {
-    expenses = expenses.filter(e => e.id !== id);
+  function addExpense() {
+    const title = document.getElementById('exp-title').value.trim();
+    const amount = parseFloat(document.getElementById('exp-amount').value);
+    const category = document.getElementById('exp-category').value;
+    const payer = document.getElementById('exp-payer').value;
+    
+    const checkboxes = document.querySelectorAll('.split-checkbox:checked');
+    const splitWith = Array.from(checkboxes).map(cb => cb.value);
+
+    if (!title || isNaN(amount) || amount <= 0) return alert('請輸入有效的項目名稱與金額');
+    if (splitWith.length === 0) return alert('請至少選擇一位分攤成員');
+
+    const item = { id: Date.now(), title, amount, category, payer, splitWith };
+    expenses.push(item);
+    localStorage.setItem('trip_expenses', JSON.stringify(expenses));
+
+    document.getElementById('exp-title').value = '';
+    document.getElementById('exp-amount').value = '';
     renderExpenses();
-    calculateSettlement();
+    alert('支出新增成功！');
   }
 
-  // 自動計算分帳演算法
-  function calculateSettlement() {
-    const resultDiv = document.getElementById('settlementList');
-    if (members.length === 0 || expenses.length === 0) {
-      resultDiv.innerHTML = '<p style="color:#888;">加入成員與消費後自動計算</p>';
+  function deleteExpense(id) {
+    if(confirm('確定要刪除這筆紀錄嗎？')) {
+      expenses = expenses.filter(e => e.id !== id);
+      localStorage.setItem('trip_expenses', JSON.stringify(expenses));
+      renderExpenses();
+    }
+  }
+
+  function renderExpenses() {
+    const container = document.getElementById('expense-list');
+    if (expenses.length === 0) {
+      container.innerHTML = '<p style="color:var(--text-muted); text-align:center;">尚無任何紀錄</p>';
       return;
     }
 
-    // 初始化所有人的收支平衡 (應收/應付)
-    let balance = {};
-    members.forEach(m => balance[m] = 0);
+    container.innerHTML = expenses.slice().reverse().map(e => `
+      <div class="expense-item">
+        <div class="expense-info">
+          <div class="title">${e.title} <span class="badge">${e.category}</span></div>
+          <div class="sub">付款：<b>${e.payer}</b> | 分攤：${e.splitWith.join(', ')}</div>
+        </div>
+        <div>
+          <div class="expense-amount">$${e.amount}</div>
+          <button style="color:red; background:none; border:none; font-size:0.8rem; cursor:pointer;" onclick="deleteExpense(${e.id})">刪除</button>
+        </div>
+      </div>
+    `).join('');
+  }
 
-    // 計算每筆消費平均分配
-    const totalPeople = members.length;
-    expenses.forEach(e => {
-      const perPerson = e.amount / totalPeople;
-      // 付款人 +總額，但所有人（包含付款人）都要扣除均分額
-      balance[e.payer] += e.amount;
-      members.forEach(m => balance[m] -= perPerson);
-    });
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
-    // 分離欠錢者 (Debtors) 與該收錢者 (Creditors)
-    let debtors = [];
-    let creditors = [];
-
-    for (let m in balance) {
-      let b = Math.round(balance[m]); // 四捨五入到整數
-      if (b < -1) debtors.push({ name: m, amount: -b });
-      else if (b > 1) creditors.push({ name: m, amount: b });
-    }
-
-    // 計算最佳轉帳路徑
-    let settlements = [];
-    let i = 0, j = 0;
-
-    while (i < debtors.length && j < creditors.length) {
-      let debt = debtors[i].amount;
-      let credit = creditors[j].amount;
-      let payAmount = Math.min(debt, credit);
-
-      settlements.push(`<strong>${debtors[i].name}</strong> 應支付 <strong>$${payAmount}</strong> 給 <strong>${creditors[j].name}</strong>`);
-
-      debtors[i].amount -= payAmount;
-      creditors[j].amount -= payAmount;
-
-      if (debtors[i].amount < 1) i++;
-      if (creditors[j].amount < 1) j++;
-    }
-
-    if (settlements.length === 0) {
-      resultDiv.innerHTML = '<div class="settle-item">🎉 目前大家都結清了，互不相欠！</div>';
+    if (tab === 'records') {
+      document.getElementById('tab-records').classList.add('active');
+      event.target.classList.add('active');
     } else {
-      resultDiv.innerHTML = settlements.map(s => `<div class="settle-item">💵 ${s}</div>`).join('');
+      document.getElementById('tab-summary').classList.add('active');
+      event.target.classList.add('active');
+      calculateSettlement();
+      renderPersonAnalysis();
     }
   }
-</script>
 
+  function calculateSettlement() {
+    let totalTrip = 0;
+    let balances = {};
+    members.forEach(m => balances[m] = 0);
+
+    expenses.forEach(e => {
+      totalTrip += e.amount;
+      balances[e.payer] += e.amount;
+      const perHead = e.amount / e.splitWith.length;
+      e.splitWith.forEach(m => {
+        if(balances[m] !== undefined) balances[m] -= perHead;
+      });
+    });
+
+    document.getElementById('total-summary-stats').innerHTML = `
+      <p style="font-size:1.2rem;">全團總支出：<b style="color:var(--accent);">$${totalTrip.toFixed(0)}</b></p>
+      <p style="font-size:0.95rem; color:var(--text-muted);">人均費用約：$${(members.length ? totalTrip/members.length : 0).toFixed(0)} / 人</p>
+    `;
+
+    // 最小化化解算帳
+    let debtors = [], creditors = [];
+    for (let m in balances) {
+      if (balances[m] < -1) debtors.push({ name: m, amount: -balances[m] });
+      if (balances[m] > 1) creditors.push({ name: m, amount: balances[m] });
+    }
+
+    let settlementHTML = '';
+    let i = 0, j = 0;
+    let keyIdx = 0;
+
+    while (i < debtors.length && j < creditors.length) {
+      let pay = Math.min(debtors[i].amount, creditors[j].amount);
+      let transferKey = `${debtors[i].name}_to_${creditors[j].name}_${pay.toFixed(0)}`;
+      let isDone = transfers[transferKey] || false;
+
+      settlementHTML += `
+        <div class="settlement-item">
+          <div class="settlement-text">
+            <b>${debtors[i].name}</b> 應給 <b>${creditors[j].name}</b>
+            <span style="color:var(--accent); font-weight:bold;">$${pay.toFixed(0)}</span>
+          </div>
+          <button class="status-btn ${isDone ? 'status-done' : 'status-pending'}" onclick="toggleTransfer('${transferKey}')">
+            ${isDone ? '✓ 已轉帳' : '未轉帳'}
+          </button>
+        </div>
+      `;
+
+      debtors[i].amount -= pay;
+      creditors[j].amount -= pay;
+      if (debtors[i].amount < 1) i++;
+      if (creditors[j].amount < 1) j++;
+      keyIdx++;
+    }
+
+    document.getElementById('settlement-list').innerHTML = settlementHTML || '<p style="color:var(--text-muted);">大家費用剛好平衡，不需要額外轉帳！</p>';
+  }
+
+  function toggleTransfer(key) {
+    transfers[key] = !transfers[key];
+    localStorage.setItem('trip_transfers', JSON.stringify(transfers));
+    calculateSettlement();
+  }
+
+  function renderPersonAnalysis() {
+    const person = document.getElementById('select-person-analysis').value;
+    if(!person) return;
+
+    let outOfPocket = 0; // 代墊/實際支付
+    let sharedCost = 0;  // 個人應分攤的共同花費
+    let personalSoloCost = 0; // 個人獨有花費 (只有自己分攤)
+
+    expenses.forEach(e => {
+      if (e.payer === person) outOfPocket += e.amount;
+      if (e.splitWith.includes(person)) {
+        const share = e.amount / e.splitWith.length;
+        sharedCost += share;
+        if (e.splitWith.length === 1) personalSoloCost += e.amount;
+      }
+    });
+
+    document.getElementById('person-analysis-result').innerHTML = `
+      <div style="line-height: 1.8;">
+        <p>💳 <b>${person}</b> 現場代墊總額：<b>$${outOfPocket.toFixed(0)}</b></p>
+        <p>🎯 <b>${person}</b> 應負擔總總花費：<b style="color:var(--accent);">$${sharedCost.toFixed(0)}</b></p>
+        <ul style="font-size:0.95rem; color:var(--text-muted); margin-left:20px; margin-top:5px;">
+          <li>包含個人獨立花費：$${personalSoloCost.toFixed(0)}</li>
+          <li>包含團體共同分攤：$${(sharedCost - personalSoloCost).toFixed(0)}</li>
+        </ul>
+      </div>
+    `;
+  }
+
+  function exportToCSV() {
+    if(expenses.length === 0) return alert('目前沒有可匯出的資料');
+    let csv = '\uFEFF'; // UTF-8 BOM 防亂碼
+    csv += '項目,金額,類別,付款人,分攤成員\n';
+
+    expenses.forEach(e => {
+      csv += `"${e.title}",${e.amount},"${e.category}","${e.payer}","${e.splitWith.join(';')}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `旅遊收支明細_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  init();
+</script>
 </body>
 </html>
