@@ -62,7 +62,7 @@
         /* 複選按鈕區塊樣式 */
         .member-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 手機版排成三欄，方便點擊 */
+            grid-template-columns: repeat(3, 1fr); /* 排成三欄，方便點擊 */
             gap: 10px;
             margin-top: 8px;
         }
@@ -82,7 +82,7 @@
         }
 
         .checkbox-btn input {
-            display: none; /* 隱藏原本原生的小框框 */
+            display: none; /* 隱藏原生小框框 */
         }
 
         /* 被選中的成員樣式 (海洋藍高亮) */
@@ -130,7 +130,7 @@
 
         .item-row {
             border-bottom: 1px solid #E5DCCB;
-            padding: 10px 0;
+            padding: 12px 0;
             font-size: 16px;
         }
 
@@ -215,9 +215,10 @@
     </div>
 
     <script>
+        // 帶入您設定的 Google Apps Script Web App URL
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyrZzupIe0nuod4zoB4YxLk2VYmeUR5FcLw3cJDmqmbh9WCIkkZFdaHUIe5J--0Mqti/exec";
         
-        // 設定成員名單
+        // 9位成員名單
         const membersList = ["鵬", "沛", "蓉", "云", "閎", "慈", "吳", "畯", "璇"];
 
         window.onload = function() {
@@ -231,7 +232,7 @@
             grid.innerHTML = "";
             membersList.forEach(m => {
                 const label = document.createElement("label");
-                label.className = "checkbox-btn active"; // 預設高亮
+                label.className = "checkbox-btn active"; // 預設高亮選取
                 label.innerHTML = `
                     <input type="checkbox" name="memberChoice" value="${m}" checked onchange="toggleMemberBtn(this)">
                     ${m}
@@ -259,7 +260,7 @@
             });
         }
 
-        // 取得目前被勾選的成員（以逗號分隔）
+        // 取得目前被勾選的成員字串 (逗號分隔)
         function getSelectedMembers() {
             const checkboxes = document.getElementsByName("memberChoice");
             const selected = [];
@@ -294,7 +295,7 @@
                 amount: amount,
                 category: document.getElementById("category").value,
                 payer: document.getElementById("payer").value,
-                members: selectedMembers, // 取得勾選的成員字串
+                members: selectedMembers,
                 isAdvance: document.getElementById("isAdvance").value,
                 settleStatus: document.getElementById("settleStatus").value
             };
@@ -308,11 +309,11 @@
             .then(() => {
                 alert("✅ 成功新增並同步至 Google Sheet！");
                 document.getElementById("expenseForm").reset();
-                selectAllMembers(true); // 重置成員為預設全選
+                selectAllMembers(true); // 重置為預設全選
                 submitBtn.disabled = false;
                 submitBtn.innerText = "同步至 Google Sheet";
                 
-                setTimeout(loadData, 1500);
+                setTimeout(loadData, 1500); // 1.5秒後重新讀取最新資料
             })
             .catch(err => {
                 alert("❌ 同步失敗：" + err);
@@ -321,7 +322,7 @@
             });
         }
 
-        // 從 Google Sheet 讀取最新明細
+        // 從 Google Sheet 讀取最新明細 (含中文字解碼處理)
         function loadData() {
             fetch(GAS_API_URL)
             .then(res => res.json())
@@ -349,10 +350,10 @@
                                 <strong>${itemName}</strong>
                                 <span style="font-weight: bold; color: var(--ocean-dark);">$${itemAmt}</span>
                             </div>
-                            <div style="font-size: 14px; color: #666; margin-top: 4px;">
+                            <div style="font-size: 14px; color: #555; margin-top: 4px;">
                                 代墊人：<strong>${itemPayer}</strong> | 分攤：${itemMembers}
                             </div>
-                            <div style="font-size: 14px; color: #666; margin-top: 2px;">
+                            <div style="font-size: 14px; color: #555; margin-top: 2px;">
                                 類別：${itemCat} 
                                 <span class="badge ${badgeClass}" style="margin-left: 6px;">${itemStatus}</span>
                             </div>
@@ -362,7 +363,7 @@
                 listDiv.innerHTML = html;
             })
             .catch(err => {
-                document.getElementById("dataList").innerHTML = "<p style='text-align:center; color:red;'>資料讀取中/失敗，請確認 Google Apps Script 部署設定</p>";
+                document.getElementById("dataList").innerHTML = "<p style='text-align:center; color:red;'>資料讀取中/失敗，請確認 Apps Script 部署版本與 UTF-8 設定</p>";
             });
         }
     </script>
